@@ -22,6 +22,7 @@ export interface ClientConfigRow {
   gscSiteUrl: string | null;
   ga4PropertyId: string | null;
   googleAdsCustomerId: string | null;
+  metaAdAccountId: string | null;
 }
 
 interface GvizCell {
@@ -137,6 +138,7 @@ export class ClientsConfigService {
     const iGscUrl = findCol('gsc site url');
     const iGa4Id = findCol('ga4 property id');
     const iAdsId = findCol('google ads customer id');
+    const iMetaId = findCol('meta ad account id') >= 0 ? findCol('meta ad account id') : findCol('meta account id');
 
     const isBanner = (a: string) => {
       if (!a) return true;
@@ -186,6 +188,7 @@ export class ClientsConfigService {
         gscSiteUrl: iGscUrl >= 0 ? String(row[iGscUrl] || '').trim() || null : null,
         ga4PropertyId: iGa4Id >= 0 ? String(row[iGa4Id] || '').trim() || null : null,
         googleAdsCustomerId: iAdsId >= 0 ? String(row[iAdsId] || '').trim() || null : null,
+        metaAdAccountId: iMetaId >= 0 ? String(row[iMetaId] || '').trim() || null : null,
       });
     }
     return result;

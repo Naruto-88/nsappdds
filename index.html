@@ -673,10 +673,10 @@ let WINS = [];         // [{id, vertical, playName, description, result, sourceC
 // Cloudflare Worker proxy endpoint for Claude API calls (set in Step 1)
 const CLAUDE_PROXY_URL = 'https://netstripes-claude-proxy.ddesilva.workers.dev/';
 
-// NestJS backend: Google login (tech@netstripes.com) + live GSC/GA4 data for the
-// SEO & Organic card. Point this at your deployed backend once it's live; defaults
-// to the local dev server started with `npm run start:dev` in /server.
-const BACKEND_URL = 'http://localhost:3001';
+// Backend URL: Auto-detects localhost or deployed origin
+const BACKEND_URL = (typeof window !== 'undefined' && window.location.origin && window.location.origin.startsWith('http')) 
+  ? window.location.origin 
+  : 'https://nsapp.netstripes.au';
 
 // ══════════════════════════════════════════════════════════════
 //  RULES ENGINE
@@ -890,14 +890,38 @@ function applyGoogleFunnelCtrOverlay(p,g){
   const el=document.getElementById('driFunnelCtr');
   if(el)el.textContent=g.ctr.toFixed(1)+'% CTR';
 }
-// Live Google Ads data for one client/period from the backend (GET
-// /api/clients/:sheetKey/ads) — Spend/Clicks/Conversions/ROAS/CTR/Quality Score via
-// the Google Ads API. Resolves to null on any failure (including "no Developer
-// Token configured yet"), same graceful-degrade contract as fetchSeoFromGoogle.
+// Live Google Ads data for one client/period from the backend
 function fetchAdsFromGoogle(sheetKey,period){
   return fetch(`${BACKEND_URL}/api/clients/${encodeURIComponent(sheetKey)}/ads?period=${period}`,{credentials:'include'})
     .then(r=>r.ok?r.json():null)
     .catch(()=>null);
+}
+
+// Live Meta Ads data for one client/period from the backend (GET /api/clients/:sheetKey/meta)
+function fetchMetaFromApi(sheetKey,period){
+  return fetch(`${BACKEND_URL}/api/clients/${encodeURIComponent(sheetKey)}/meta?period=${period}`,{credentials:'include'})
+    .then(r=>r.ok?r.json():null)
+    .catch(()=>null);
+}
+
+// Overlays live Meta Ads data onto the rendered Meta Ads card
+function applyMetaAdsOverlay(c,p,d,mBase,mBenchTxt,m){
+  if(CURVIEW!=='dri'||CLIENTS[CUR]!==c||PERIOD!==p)return;
+  const body=document.getElementById('meta-body');
+  if(!body||!m)return;
+  const dash='<span style="color:var(--st)">-</span>';
+  const cplNum = (m.spend!=null && m.leads!=null && m.leads>0) ? m.spend/m.leads : (m.cpl!=null ? m.cpl : null);
+  const cplRow = cplNum!=null
+    ? mrow('CPL',cpl(cplNum),tagH(cplNum,mBase,mBase*0.8,'lo'),'$'+mBase)
+    : mrow('CPL',dash);
+  const spendRow = m.spend!=null ? mrow('Spend','$'+Math.round(m.spend)) : mrow('Spend',dash);
+  const reachRow = m.reach!=null ? mrow('Reach',m.reach.toLocaleString()) : mrow('Reach',dash);
+  const leadsRow = m.leads!=null ? mrow('Leads',m.leads) : mrow('Leads',dash);
+  const freqRow = m.frequency!=null ? mrow('Ad Frequency',m.frequency.toFixed(2)) : mrow('Ad Frequency',dash);
+  const ctrRow = m.ctr!=null ? mrow('CTR',m.ctr.toFixed(2)+'%') : mrow('CTR',dash);
+  
+  body.innerHTML = cplRow+mrow('Meta Benchmark',mBenchTxt)+spendRow+reachRow+leadsRow+freqRow+ctrRow;
+  if(cplNum!=null) setBadgeRag('meta-badge',cplBenchmarkRag(cplNum,mBase));
 }
 // Overlays live Google Ads data onto the already-rendered Google Ads card. CPL here
 // is computed client-side as spend/conversions (the Ads API has no single "CPL"
@@ -1831,14 +1855,15 @@ function renderDRI(){
   const metaBase = clientMetaCPLBaseline(c);
   const metaCPLActual=parseFloat((d.meta.cpl||'999').replace(/[$,]/g,''));
   if(channelHasNoData(d.meta,'meta'))setBadgeDash('meta-badge');else setBadgeRag('meta-badge',cplBenchmarkRag(metaCPLActual,metaBase));
-  const metaBenchTxt = metaBase?('$'+metaBase):'—';
-  const metaCPLTag = (d.meta.cpl!=='—' && metaBase)
-      ? tagH(parseFloat((d.meta.cpl||'999').replace(/[$,]/g,'')), metaBase*1.1, metaBase,'lo') : '';
   document.getElementById('meta-body').innerHTML=
       mrow('CPL',d.meta.cpl,metaCPLTag)
     + mrow('Baseline Meta CPL', metaBenchTxt)
     + mrow('Frequency',d.meta.freq,d.meta.freq&&d.meta.freq!=='—'?tagH(parseFloat(d.meta.freq||0),2.5,3.0,'lo'):'')
     + mrow('Reach',d.meta.reach)+mrow('ROAS',d.meta.roas)+mrow('Leads',d.meta.leads);
+  fetchMetaFromApi(c.sheetKey,p).then(m=>{
+    if(!m)return;
+    applyMetaAdsOverlay(c,p,d,metaBase,metaBenchTxt,m);
+  });
   if(channelHasNoData(d.cro,'cro'))setBadgeDash('cro-badge');else setBadge('cro-badge',chScore('cro'));
   document.getElementById('cro-body').innerHTML=mrow('Bounce',d.cro.bounce,tagH(parseFloat(d.cro.bounce),50,40,'lo'),'<55%')+mrow('Conv Rate',d.cro.conv+'%',tagH(d.cro.conv,c.baselines.conv*0.85,c.baselines.conv),c.baselines.conv+'%')+mrow('Sessions',d.cro.sess.toLocaleString())+mrow('A/B Tests',d.cro.tests)+mrow('Avg Time',d.cro.time);
   if(channelHasNoData(d.soc,'soc'))setBadgeDash('soc-badge');else setBadge('soc-badge',chScore('soc'));

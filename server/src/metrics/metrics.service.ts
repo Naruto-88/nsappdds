@@ -3,6 +3,7 @@ import { ClientsConfigService } from '../clients-config/clients-config.service';
 import { SearchConsoleService } from '../google-api/search-console.service';
 import { AnalyticsService } from '../google-api/analytics.service';
 import { GoogleAdsService } from '../google-api/google-ads.service';
+import { MetaAdsService } from '../google-api/meta-ads.service';
 import { PeriodKey, periodDateRange, priorPeriodDateRange } from './period.util';
 
 export interface SeoMetricsResponse {
@@ -26,12 +27,18 @@ export interface AdsMetricsResponse {
   qualityScore: number | null;
 }
 
-// Assembles live Google-sourced fields per client/period. Each field is
-// independently null when that client has no mapped property (or the call fails)
-// — never falls back to a guess. Domain Authority, New Backlinks, A/B Tests, Avg
-// Time, Posts/Reach/Top Platform are NOT part of any response here on purpose:
-// no Google API provides them, so the dashboard keeps reading those straight from
-// the Sheet, unchanged.
+export interface MetaMetricsResponse {
+  spend: number | null;
+  reach: number | null;
+  impressions: number | null;
+  clicks: number | null;
+  leads: number | null;
+  cpl: number | null;
+  cpc: number | null;
+  ctr: number | null;
+  frequency: number | null;
+}
+
 @Injectable()
 export class MetricsService {
   private readonly logger = new Logger(MetricsService.name);
@@ -41,6 +48,7 @@ export class MetricsService {
     private readonly searchConsole: SearchConsoleService,
     private readonly analytics: AnalyticsService,
     private readonly googleAds: GoogleAdsService,
+    private readonly metaAds: MetaAdsService,
   ) {}
 
   async getSeoMetrics(sheetKey: string, period: PeriodKey): Promise<SeoMetricsResponse> {
@@ -118,6 +126,36 @@ export class MetricsService {
       roas: ads ? ads.roas : null,
       ctr: ads ? ads.ctr : null,
       qualityScore: ads ? ads.qualityScore : null,
+    };
+  }
+
+  async getMetaMetrics(sheetKey: string, period: PeriodKey): Promise<MetaMetricsResponse> {
+    const mapping = await this.clientsConfig.getMapping(sheetKey);
+    const current = periodDateRange(period);
+
+    if (mapping && !mapping.metaAdAccountId) {
+      this.logger.warn(`"${sheetKey}" has a _CONFIG row but no Meta Ad Account ID filled in yet.`);
+    }
+
+    const meta = mapping?.metaAdAccountId
+      ? await this.metaAds.getAccountSummary(mapping.metaAdAccountId, current)
+      : null;
+
+    this.logger.log(
+      `Meta metrics for "${sheetKey}" [${period}]: ${mapping?.metaAdAccountId ? (meta ? 'ok' : 'FAILED') : 'not mapped'}` +
+        (meta ? ` -> spend=${meta.spend}, reach=${meta.reach}, leads=${meta.leads}, cpl=${meta.cpl}` : ''),
+    );
+
+    return {
+      spend: meta ? meta.spend : null,
+      reach: meta ? meta.reach : null,
+      impressions: meta ? meta.impressions : null,
+      clicks: meta ? meta.clicks : null,
+      leads: meta ? meta.leads : null,
+      cpl: meta ? meta.cpl : null,
+      cpc: meta ? meta.cpc : null,
+      ctr: meta ? meta.ctr : null,
+      frequency: meta ? meta.frequency : null,
     };
   }
 }

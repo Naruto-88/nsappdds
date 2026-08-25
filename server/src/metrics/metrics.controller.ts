@@ -21,4 +21,10 @@ export class MetricsController {
     const p: PeriodKey = VALID_PERIODS.includes(period as PeriodKey) ? (period as PeriodKey) : 'week';
     return this.metrics.getAdsMetrics(sheetKey, p);
   }
+
+  @Get(':sheetKey/meta')
+  async getMeta(@Param('sheetKey') sheetKey: string, @Query('period') period: string) {
+    const p: PeriodKey = VALID_PERIODS.includes(period as PeriodKey) ? (period as PeriodKey) : 'week';
+    return this.metrics.getMetaMetrics(sheetKey, p);
+  }
 }

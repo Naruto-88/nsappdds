@@ -12,18 +12,29 @@ export class AuthController {
     private readonly config: ConfigService,
   ) {}
 
+  private getRedirectUri(req: Request): string | undefined {
+    if (process.env.NODE_ENV === 'production' && this.config.get<string>('GOOGLE_REDIRECT_URI')) {
+      return this.config.get<string>('GOOGLE_REDIRECT_URI');
+    }
+    const host = req.get('host');
+    const proto = req.headers['x-forwarded-proto'] || req.protocol || 'http';
+    return `${proto}://${host}/auth/google/callback`;
+  }
+
   @Get('google/login')
-  login(@Res() res: Response) {
-    res.redirect(this.authService.buildConsentUrl());
+  login(@Req() req: Request, @Res() res: Response) {
+    const redirectUri = this.getRedirectUri(req);
+    res.redirect(this.authService.buildConsentUrl(redirectUri));
   }
 
   @Get('google/callback')
-  async callback(@Query('code') code: string, @Query('error') error: string, @Res() res: Response) {
+  async callback(@Query('code') code: string, @Query('error') error: string, @Req() req: Request, @Res() res: Response) {
     if (error || !code) {
       return this.renderResult(res, false, error || 'No authorization code returned by Google.');
     }
     try {
-      const session = await this.authService.handleCallback(code);
+      const redirectUri = this.getRedirectUri(req);
+      const session = await this.authService.handleCallback(code, redirectUri);
       const token = this.authService.issueSessionToken(session);
       res.cookie(SESSION_COOKIE, token, {
         httpOnly: true,
@@ -32,8 +43,10 @@ export class AuthController {
         maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
       });
       const dashboardOrigin = this.config.get<string>('DASHBOARD_ORIGIN');
-      if (dashboardOrigin) return res.redirect(dashboardOrigin);
-      return this.renderResult(res, true, session.email);
+      if (dashboardOrigin && process.env.NODE_ENV === 'production') {
+        return res.redirect(dashboardOrigin);
+      }
+      return res.redirect('/');
     } catch (e) {
       return this.renderResult(res, false, (e as Error).message);
     }

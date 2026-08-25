@@ -1,0 +1,51 @@
+name: Deploy to cPanel (SSH)
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  deploy:
+    name: Build and Deploy to cPanel
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@44
+        with:
+          node-version: 20
+
+      - name: Install Server Dependencies & Build
+        run: |
+          cd server
+          npm ci
+          npm run build
+
+      - name: Deploy to cPanel via SSH rsync
+        uses: easingthemes/ssh-deploy@main
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          ARGS: "-rlgoDzvc -i --delete"
+          SOURCE: "/"
+          REMOTE_HOST: ${{ secrets.SSH_HOST }}
+          REMOTE_USER: ${{ secrets.SSH_USER }}
+          TARGET: ${{ secrets.REMOTE_TARGET }}
+          EXCLUDE: "/.git/, /.github/, /server/node_modules/, /node_modules/"
+
+      - name: Restart Node.js Application on cPanel
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            cd ${{ secrets.REMOTE_TARGET }}/server
+            npm install --omit=dev
+            touch ../tmp/restart.txt || true
+            mkdir -p tmp && touch tmp/restart.txt || true

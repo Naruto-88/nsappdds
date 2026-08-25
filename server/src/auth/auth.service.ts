@@ -32,16 +32,17 @@ export class AuthService {
     private readonly tokenStore: TokenStoreService,
   ) {}
 
-  private buildOAuth2Client() {
+  private buildOAuth2Client(redirectUri?: string) {
+    const defaultUri = this.config.get<string>('GOOGLE_REDIRECT_URI');
     return new google.auth.OAuth2(
       this.config.get<string>('GOOGLE_CLIENT_ID'),
       this.config.get<string>('GOOGLE_CLIENT_SECRET'),
-      this.config.get<string>('GOOGLE_REDIRECT_URI'),
+      redirectUri || defaultUri,
     );
   }
 
-  buildConsentUrl(): string {
-    const client = this.buildOAuth2Client();
+  buildConsentUrl(redirectUri?: string): string {
+    const client = this.buildOAuth2Client(redirectUri);
     const hd = this.config.get<string>('ALLOWED_HD');
     return client.generateAuthUrl({
       access_type: 'offline', // required to receive a refresh_token
@@ -51,8 +52,8 @@ export class AuthService {
     });
   }
 
-  async handleCallback(code: string): Promise<SessionPayload> {
-    const client = this.buildOAuth2Client();
+  async handleCallback(code: string, redirectUri?: string): Promise<SessionPayload> {
+    const client = this.buildOAuth2Client(redirectUri);
     const { tokens } = await client.getToken(code);
     if (!tokens.access_token || !tokens.refresh_token) {
       throw new Error(

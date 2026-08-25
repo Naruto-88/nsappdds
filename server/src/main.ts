@@ -1,17 +1,26 @@
 import { NestFactory } from '@nestjs/core';
 import cookieParser from 'cookie-parser';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.use(cookieParser());
-  // credentials:true + an explicit origin (not '*') is required for the session
-  // cookie to be sent/received across origins — the dashboard (index.html) and
-  // this API run on different ports in dev, and likely different hosts in prod.
+  
   app.enableCors({
-    origin: process.env.DASHBOARD_ORIGIN ?? true,
+    origin: (origin, callback) => {
+      callback(null, true);
+    },
     credentials: true,
   });
-  await app.listen(process.env.PORT ?? 3001);
+
+  // Serve the frontend index.html
+  const publicPath = join(__dirname, '..', '..');
+  app.useStaticAssets(publicPath);
+
+  const port = process.env.PORT ?? 3001;
+  await app.listen(port);
+  console.log(`NestJS server running on http://localhost:${port}`);
 }
 bootstrap();
