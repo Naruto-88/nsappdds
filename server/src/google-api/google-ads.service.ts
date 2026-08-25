@@ -23,7 +23,7 @@ interface GAdsSearchRow {
   adGroupCriterion?: { qualityInfo?: { qualityScore?: number } };
 }
 
-const API_VERSION = 'v17';
+const API_VERSION = 'v19';
 const BASE_URL = `https://googleads.googleapis.com/${API_VERSION}`;
 
 // Raw REST calls to the Google Ads API — it isn't part of the `googleapis` client
