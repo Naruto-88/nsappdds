@@ -135,10 +135,26 @@ export class ClientsConfigService {
     const iMetaCPL = findCol('baseline meta cpl');
     const iSeoLeadsFound = findCol('baseline seo leads');
     const iSeoLeads = iSeoLeadsFound >= 0 ? iSeoLeadsFound : 14; // column O, same fallback as the frontend
-    const iGscUrl = findCol('gsc site url');
-    const iGa4Id = findCol('ga4 property id');
-    const iAdsId = findCol('google ads customer id');
-    const iMetaId = findCol('meta ad account id') >= 0 ? findCol('meta ad account id') : findCol('meta account id');
+    const iGscUrl = findCol('gsc site url') >= 0 ? findCol('gsc site url') : findCol('gsc url');
+    const iGa4Id = findCol('ga4 property id') >= 0 ? findCol('ga4 property id') : findCol('ga4 id');
+    const iAdsId =
+      findCol('google ads customer id') >= 0
+        ? findCol('google ads customer id')
+        : findCol('google ads id') >= 0
+          ? findCol('google ads id')
+          : findCol('google ads') >= 0
+            ? findCol('google ads')
+            : findCol('customer id');
+    const iMetaId =
+      findCol('meta ad account id') >= 0
+        ? findCol('meta ad account id')
+        : findCol('meta ad acc id') >= 0
+          ? findCol('meta ad acc id')
+          : findCol('meta account id') >= 0
+            ? findCol('meta account id')
+            : findCol('meta ads id') >= 0
+              ? findCol('meta ads id')
+              : findCol('meta id');
 
     const isBanner = (a: string) => {
       if (!a) return true;
