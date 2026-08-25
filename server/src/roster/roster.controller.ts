@@ -3,7 +3,7 @@ import { SessionAuthGuard } from '../auth/session-auth.guard';
 import { RosterService } from './roster.service';
 import { AnalyticsService } from '../google-api/analytics.service';
 
-@Controller('api/roster')
+@Controller(['api/roster', 'home/api/roster'])
 @UseGuards(SessionAuthGuard)
 export class RosterController {
   constructor(

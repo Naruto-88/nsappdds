@@ -5,7 +5,7 @@ import { PeriodKey } from './period.util';
 
 const VALID_PERIODS: PeriodKey[] = ['week', 'week2', 'week3', 'month', 'q90'];
 
-@Controller('api/clients')
+@Controller(['api/clients', 'home/api/clients'])
 @UseGuards(SessionAuthGuard)
 export class MetricsController {
   constructor(private readonly metrics: MetricsService) {}

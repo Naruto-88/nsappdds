@@ -5,7 +5,7 @@ import { AuthService } from './auth.service';
 
 const SESSION_COOKIE = 'ns_session';
 
-@Controller('auth')
+@Controller(['auth', 'home/auth'])
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
