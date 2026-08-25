@@ -19,6 +19,11 @@ async function bootstrap() {
   const rootDir = join(__dirname, '..', '..');
   app.useStaticAssets(rootDir);
 
+  // If deployed on a subpath like /home, set global prefix
+  if (process.env.SUBPATH) {
+    app.setGlobalPrefix(process.env.SUBPATH);
+  }
+
   const port = process.env.PORT ?? 3001;
   await app.listen(port);
   console.log(`NestJS server running on http://localhost:${port}`);
