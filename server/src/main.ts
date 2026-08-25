@@ -15,9 +15,9 @@ async function bootstrap() {
     credentials: true,
   });
 
-  // Serve the frontend index.html
-  const publicPath = join(__dirname, '..', '..');
-  app.useStaticAssets(publicPath);
+  // Serve the frontend index.html from root
+  const rootDir = join(__dirname, '..', '..');
+  app.useStaticAssets(rootDir);
 
   const port = process.env.PORT ?? 3001;
   await app.listen(port);
