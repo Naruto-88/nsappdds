@@ -45,12 +45,19 @@ export class AuthService {
   }
 
   buildConsentUrl(redirectUri?: string): string {
-    const client = this.buildOAuth2Client(redirectUri);
-    const hd = this.config.get<string>('ALLOWED_HD');
+    const clientId = this.config.get<string>('GOOGLE_CLIENT_ID') || process.env.GOOGLE_CLIENT_ID || '';
+    const clientSecret = this.config.get<string>('GOOGLE_CLIENT_SECRET') || process.env.GOOGLE_CLIENT_SECRET || '';
+    const uri = redirectUri || this.config.get<string>('GOOGLE_REDIRECT_URI') || process.env.GOOGLE_REDIRECT_URI || 'https://nsapp.netstripes.au/home/auth/google/callback';
+
+    const client = new google.auth.OAuth2(clientId, clientSecret, uri);
+    const hd = this.config.get<string>('ALLOWED_HD') || process.env.ALLOWED_HD;
+    
     return client.generateAuthUrl({
-      access_type: 'offline', // required to receive a refresh_token
-      prompt: 'consent', // forces a refresh_token even on repeat logins
+      access_type: 'offline',
+      prompt: 'consent',
       scope: SCOPES,
+      redirect_uri: uri,
+      client_id: clientId,
       ...(hd ? { hd } : {}),
     });
   }
