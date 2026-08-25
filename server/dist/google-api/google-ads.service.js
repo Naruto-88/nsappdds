@@ -14,7 +14,7 @@ exports.GoogleAdsService = void 0;
 const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const google_auth_client_service_1 = require("./google-auth-client.service");
-const API_VERSION = 'v19';
+const API_VERSION = 'v25';
 const BASE_URL = `https://googleads.googleapis.com/${API_VERSION}`;
 let GoogleAdsService = GoogleAdsService_1 = class GoogleAdsService {
     config;
