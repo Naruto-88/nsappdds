@@ -33,10 +33,13 @@ export class AuthService {
   ) {}
 
   private buildOAuth2Client(redirectUri?: string) {
-    const defaultUri = this.config.get<string>('GOOGLE_REDIRECT_URI');
+    const clientId = this.config.get<string>('GOOGLE_CLIENT_ID') || process.env.GOOGLE_CLIENT_ID;
+    const clientSecret = this.config.get<string>('GOOGLE_CLIENT_SECRET') || process.env.GOOGLE_CLIENT_SECRET;
+    const defaultUri = this.config.get<string>('GOOGLE_REDIRECT_URI') || process.env.GOOGLE_REDIRECT_URI || 'https://nsapp.netstripes.au/home/auth/google/callback';
+    
     return new google.auth.OAuth2(
-      this.config.get<string>('GOOGLE_CLIENT_ID'),
-      this.config.get<string>('GOOGLE_CLIENT_SECRET'),
+      clientId,
+      clientSecret,
       redirectUri || defaultUri,
     );
   }

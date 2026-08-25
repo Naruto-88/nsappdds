@@ -12,13 +12,14 @@ export class AuthController {
     private readonly config: ConfigService,
   ) {}
 
-  private getRedirectUri(req: Request): string | undefined {
-    if (process.env.NODE_ENV === 'production' && this.config.get<string>('GOOGLE_REDIRECT_URI')) {
-      return this.config.get<string>('GOOGLE_REDIRECT_URI');
+  private getRedirectUri(req: Request): string {
+    const configured = this.config.get<string>('GOOGLE_REDIRECT_URI') || process.env.GOOGLE_REDIRECT_URI;
+    if (configured && configured.trim().startsWith('http')) {
+      return configured.trim();
     }
-    const host = req.get('host');
-    const proto = req.headers['x-forwarded-proto'] || req.protocol || 'http';
-    return `${proto}://${host}/auth/google/callback`;
+    const host = req.get('host') || 'nsapp.netstripes.au';
+    const proto = req.headers['x-forwarded-proto'] || req.protocol || 'https';
+    return `${proto}://${host}/home/auth/google/callback`;
   }
 
   @Get('google/login')
