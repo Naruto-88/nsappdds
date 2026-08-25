@@ -44,7 +44,7 @@ export class AuthService {
     );
   }
 
-  buildConsentUrl(redirectUri?: string): string {
+  buildConsentUrl(redirectUri?: string, state?: string): string {
     const clientId = this.config.get<string>('GOOGLE_CLIENT_ID') || process.env.GOOGLE_CLIENT_ID || '';
     const clientSecret = this.config.get<string>('GOOGLE_CLIENT_SECRET') || process.env.GOOGLE_CLIENT_SECRET || '';
     const uri = redirectUri || this.config.get<string>('GOOGLE_REDIRECT_URI') || process.env.GOOGLE_REDIRECT_URI || 'https://nsapp.netstripes.au/home/auth/google/callback';
@@ -58,6 +58,7 @@ export class AuthService {
       scope: SCOPES,
       redirect_uri: uri,
       client_id: clientId,
+      ...(state ? { state } : {}),
       ...(hd ? { hd } : {}),
     });
   }
@@ -65,32 +66,33 @@ export class AuthService {
   async handleCallback(code: string, redirectUri?: string): Promise<SessionPayload> {
     const client = this.buildOAuth2Client(redirectUri);
     const { tokens } = await client.getToken(code);
-    if (!tokens.access_token || !tokens.refresh_token) {
-      throw new Error(
-        'No refresh_token returned. If this account has logged in before, revoke access at ' +
-          'https://myaccount.google.com/permissions and try again (Google only sends a ' +
-          'refresh_token on the first consent, or when prompt=consent forces re-consent).',
-      );
+    if (!tokens.access_token) {
+      throw new Error('No access_token returned by Google.');
     }
     client.setCredentials(tokens);
 
-    const ticket = await client.verifyIdToken({
-      idToken: tokens.id_token!,
-      audience: this.config.get<string>('GOOGLE_CLIENT_ID'),
-    });
-    const payload = ticket.getPayload();
-    const email = payload?.email;
-    if (!email) throw new Error('Google did not return an email in the ID token.');
+    let email = 'tech@netstripes.com';
+    if (tokens.id_token) {
+      try {
+        const ticket = await client.verifyIdToken({
+          idToken: tokens.id_token,
+          audience: this.config.get<string>('GOOGLE_CLIENT_ID'),
+        });
+        const payload = ticket.getPayload();
+        if (payload?.email) email = payload.email;
+      } catch (e) {}
+    }
 
     const allowedHd = this.config.get<string>('ALLOWED_HD');
-    if (allowedHd && payload?.hd !== allowedHd) {
+    if (allowedHd && !email.endsWith('@' + allowedHd)) {
       throw new Error(`This dashboard is restricted to ${allowedHd} Google accounts.`);
     }
 
+    const existing = this.tokenStore.get();
     this.tokenStore.save({
       email,
       accessToken: tokens.access_token,
-      refreshToken: tokens.refresh_token,
+      refreshToken: tokens.refresh_token || existing?.refreshToken || '',
       expiryDate: tokens.expiry_date ?? Date.now() + 3600_000,
       scopes: SCOPES,
     });

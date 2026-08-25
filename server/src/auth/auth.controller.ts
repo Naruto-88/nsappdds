@@ -13,23 +13,37 @@ export class AuthController {
   ) {}
 
   private getRedirectUri(req: Request): string {
+    const host = req.get('host') || '';
+    const isLocal = host.includes('localhost') || host.includes('127.0.0.1');
+    if (isLocal) {
+      return `http://${host}/auth/google/callback`;
+    }
+
     const configured = this.config.get<string>('GOOGLE_REDIRECT_URI') || process.env.GOOGLE_REDIRECT_URI;
     if (configured && configured.trim().startsWith('http')) {
       return configured.trim();
     }
-    const host = req.get('host') || 'nsapp.netstripes.au';
     const proto = req.headers['x-forwarded-proto'] || req.protocol || 'https';
     return `${proto}://${host}/home/auth/google/callback`;
   }
 
   @Get('google/login')
-  login(@Req() req: Request, @Res() res: Response) {
-    const redirectUri = this.getRedirectUri(req);
-    res.redirect(this.authService.buildConsentUrl(redirectUri));
+  login(@Query('redirectUri') queryUri: string, @Req() req: Request, @Res() res: Response) {
+    const host = req.get('host') || 'localhost:3001';
+    const isLocal = host.includes('localhost') || host.includes('127.0.0.1');
+    const redirectUri = queryUri || this.getRedirectUri(req);
+    const returnTo = isLocal ? `http://${host}/` : (this.config.get<string>('DASHBOARD_ORIGIN') || `https://${host}/home`);
+    res.redirect(this.authService.buildConsentUrl(redirectUri, returnTo));
   }
 
   @Get('google/callback')
-  async callback(@Query('code') code: string, @Query('error') error: string, @Req() req: Request, @Res() res: Response) {
+  async callback(
+    @Query('code') code: string,
+    @Query('error') error: string,
+    @Query('state') state: string,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
     if (error || !code) {
       return this.renderResult(res, false, error || 'No authorization code returned by Google.');
     }
@@ -43,11 +57,15 @@ export class AuthController {
         secure: process.env.NODE_ENV === 'production',
         maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
       });
-      const dashboardOrigin = this.config.get<string>('DASHBOARD_ORIGIN');
-      if (dashboardOrigin && process.env.NODE_ENV === 'production') {
-        return res.redirect(dashboardOrigin);
+      if (state && (state.startsWith('http://') || state.startsWith('https://'))) {
+        return res.redirect(state);
       }
-      return res.redirect('/');
+      const host = req.get('host') || 'localhost:3001';
+      const isLocal = host.includes('localhost') || host.includes('127.0.0.1');
+      if (isLocal) {
+        return res.redirect(`http://${host}/`);
+      }
+      return res.redirect('https://nsapp.netstripes.au/home');
     } catch (e) {
       return this.renderResult(res, false, (e as Error).message);
     }
