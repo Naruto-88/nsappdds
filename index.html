@@ -1037,6 +1037,37 @@ function sAN(id){document.querySelectorAll('.subnav button').forEach(b=>b.classL
 // and the DRI period tabs in sync, and re-renders whichever view is currently active.
 // Replaces the old split logic where the dropdown called a non-existent render
 // function and setCP only re-rendered the DRI view, causing desync / "sync stops working".
+function formatRangeTooltip(range){
+  if(!range||!range.start||!range.end)return '';
+  const opt={day:'numeric',month:'short',year:'numeric'};
+  return `${range.start.toLocaleDateString('en-AU',opt)} – ${range.end.toLocaleDateString('en-AU',opt)}`;
+}
+
+function updatePeriodTooltips(){
+  const now=new Date();
+  const periods=['week','week2','week3','month','q90'];
+  const titles={
+    week: 'This Week: ' + formatRangeTooltip(periodDateRange('week',now)),
+    week2: 'Last 2 Weeks: ' + formatRangeTooltip(periodDateRange('week2',now)),
+    week3: 'Last 3 Weeks: ' + formatRangeTooltip(periodDateRange('week3',now)),
+    month: 'This Month: ' + formatRangeTooltip(periodDateRange('month',now)),
+    q90: 'Last 90 Days: ' + formatRangeTooltip(periodDateRange('q90',now))
+  };
+
+  const g=document.getElementById('gPer');
+  if(g){
+    g.title = titles[PERIOD] || 'Date range for selected period';
+    Array.from(g.options).forEach(opt=>{
+      if(titles[opt.value]) opt.title = titles[opt.value];
+    });
+  }
+
+  document.querySelectorAll('.per-tabs button').forEach((b,i)=>{
+    const pk=periods[i];
+    if(pk && titles[pk]) b.title = titles[pk];
+  });
+}
+
 function setPeriod(p){
   if(!p)return;
   PERIOD=p;
@@ -1045,8 +1076,12 @@ function setPeriod(p){
   // Sync the DRI period tabs
   const idx={week:0,week2:1,week3:2,month:3,q90:4}[p]; const useIdx=(idx===undefined?0:idx);
   document.querySelectorAll('.per-tabs button').forEach((b,i)=>b.classList.toggle('active',i===useIdx));
+  updatePeriodTooltips();
   // Re-render the active view
   rerenderCurrentView();
+}
+function setCP(p,btn){
+  setPeriod(p);
 }
 function periodLabel(p){
   return p==='week'?'This Week':p==='week2'?'Last 2 Weeks':p==='week3'?'Last 3 Weeks':p==='month'?'This Month':p==='q90'?'90 Days':'Selected Period';
@@ -3788,6 +3823,7 @@ function bootDashboard(){
   if(bootLbl)bootLbl.textContent='Checking for a configured Google Sheet…';
   ['driClientSel','cfSel'].forEach(id=>{const s=document.getElementById(id);CLIENTS.forEach(c=>{const o=document.createElement('option');o.value=c.id;o.textContent=c.name;s.appendChild(o);});});
   buildNav();buildCEO();
+  updatePeriodTooltips();
   // Fire initial rules across all clients for fired count
   CLIENTS.forEach(c=>runRules(c,PERIOD));
   updateClock();setInterval(updateClock,60000);
