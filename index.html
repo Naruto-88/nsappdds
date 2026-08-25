@@ -673,10 +673,12 @@ let WINS = [];         // [{id, vertical, playName, description, result, sourceC
 // Cloudflare Worker proxy endpoint for Claude API calls (set in Step 1)
 const CLAUDE_PROXY_URL = 'https://netstripes-claude-proxy.ddesilva.workers.dev/';
 
-// Backend URL: Auto-detects localhost or deployed origin
-const BACKEND_URL = (typeof window !== 'undefined' && window.location.origin && window.location.origin.startsWith('http')) 
-  ? window.location.origin 
-  : 'https://nsapp.netstripes.au';
+// Backend URL: Auto-detects localhost or deployed subpath origin
+const BACKEND_URL = (function() {
+  if (typeof window === 'undefined' || !window.location.origin) return 'https://nsapp.netstripes.au/home';
+  if (window.location.pathname.startsWith('/home')) return window.location.origin + '/home';
+  return window.location.origin;
+})();
 
 // ══════════════════════════════════════════════════════════════
 //  RULES ENGINE
