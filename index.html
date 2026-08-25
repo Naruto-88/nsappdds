@@ -1857,6 +1857,9 @@ function renderDRI(){
   const metaBase = clientMetaCPLBaseline(c);
   const metaCPLActual=parseFloat((d.meta.cpl||'999').replace(/[$,]/g,''));
   if(channelHasNoData(d.meta,'meta'))setBadgeDash('meta-badge');else setBadgeRag('meta-badge',cplBenchmarkRag(metaCPLActual,metaBase));
+  const metaBenchTxt = metaBase?('$'+metaBase):'—';
+  const metaCPLTag = (d.meta.cpl!=='—' && metaBase)
+      ? tagH(parseFloat((d.meta.cpl||'999').replace(/[$,]/g,'')), metaBase*1.1, metaBase,'lo') : '';
   document.getElementById('meta-body').innerHTML=
       mrow('CPL',d.meta.cpl,metaCPLTag)
     + mrow('Baseline Meta CPL', metaBenchTxt)
