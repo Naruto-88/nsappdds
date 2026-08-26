@@ -37,7 +37,7 @@ jobs:
           TARGET: ${{ secrets.REMOTE_TARGET }}
           EXCLUDE: "/.git/, /.github/, /server/node_modules/, /node_modules/, *.env, .env, /server/.env"
 
-      - name: Restart Node.js Application on cPanel
+      - name: Auto-Restart Node.js Application on cPanel
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -45,8 +45,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
           script: |
-            cd ${{ secrets.REMOTE_TARGET }}/server
-            npm install
-            npm run build
-            touch ../tmp/restart.txt || true
-            mkdir -p tmp && touch tmp/restart.txt || true
+            mkdir -p ${{ secrets.REMOTE_TARGET }}/tmp
+            touch ${{ secrets.REMOTE_TARGET }}/tmp/restart.txt
+            mkdir -p ${{ secrets.REMOTE_TARGET }}/server/tmp
+            touch ${{ secrets.REMOTE_TARGET }}/server/tmp/restart.txt
