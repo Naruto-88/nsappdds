@@ -185,4 +185,3 @@ exports.ClientsConfigService = ClientsConfigService = ClientsConfigService_1 = _
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [config_1.ConfigService])
 ], ClientsConfigService);
-//# sourceMappingURL=clients-config.service.js.map

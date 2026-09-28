@@ -68,6 +68,12 @@ let MetricsService = MetricsService_1 = class MetricsService {
             sessions: ga4Site ? ga4Site.sessions : null,
             engagementRate: ga4Site ? ga4Site.engagementRate : null,
             bounceRate: ga4Site ? ga4Site.bounceRate : null,
+            debug: {
+                gscSiteUrl: mapping?.gscSiteUrl || null,
+                ga4PropertyId: ga4PropertyId || null,
+                gscError: this.searchConsole.lastError,
+                ga4Error: this.analytics.lastError,
+            },
         };
     }
     async getAdsMetrics(sheetKey, period) {
@@ -123,4 +129,3 @@ exports.MetricsService = MetricsService = MetricsService_1 = __decorate([
         google_ads_service_1.GoogleAdsService,
         meta_ads_service_1.MetaAdsService])
 ], MetricsService);
-//# sourceMappingURL=metrics.service.js.map

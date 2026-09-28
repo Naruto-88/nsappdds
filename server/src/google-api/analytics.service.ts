@@ -25,6 +25,7 @@ export interface SiteSummary {
 @Injectable()
 export class AnalyticsService {
   private readonly logger = new Logger(AnalyticsService.name);
+  public lastError: string | null = null;
   private domainMapCache: { at: number; map: Map<string, string> } | null = null;
   private readonly domainMapTtlMs = 30 * 60 * 1000; // 30 min — this enumerates every accessible property + its streams, expensive to redo often
 
@@ -36,9 +37,13 @@ export class AnalyticsService {
     prior: DateRange,
   ): Promise<OrganicSummary | null> {
     const auth = this.googleAuth.getAuthorizedClient();
-    if (!auth) return null;
+    if (!auth) {
+      this.lastError = this.googleAuth.lastError || 'No authorized Google client';
+      return null;
+    }
 
     try {
+      this.lastError = null;
       const analyticsdata = google.analyticsdata({ version: 'v1beta', auth });
       const property = `properties/${propertyId}`;
 
@@ -74,7 +79,8 @@ export class AnalyticsService {
 
       return { traffic, growth, leads };
     } catch (e) {
-      this.logger.warn(`GA4 runReport failed for property ${propertyId}: ${(e as Error).message}`);
+      this.lastError = (e as Error).message;
+      this.logger.warn(`GA4 runReport failed for property ${propertyId}: ${this.lastError}`);
       return null;
     }
   }

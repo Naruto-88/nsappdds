@@ -17,6 +17,7 @@ const google_auth_client_service_1 = require("./google-auth-client.service");
 let AnalyticsService = AnalyticsService_1 = class AnalyticsService {
     googleAuth;
     logger = new common_1.Logger(AnalyticsService_1.name);
+    lastError = null;
     domainMapCache = null;
     domainMapTtlMs = 30 * 60 * 1000;
     constructor(googleAuth) {
@@ -24,9 +25,12 @@ let AnalyticsService = AnalyticsService_1 = class AnalyticsService {
     }
     async getOrganicSummary(propertyId, current, prior) {
         const auth = this.googleAuth.getAuthorizedClient();
-        if (!auth)
+        if (!auth) {
+            this.lastError = this.googleAuth.lastError || 'No authorized Google client';
             return null;
+        }
         try {
+            this.lastError = null;
             const analyticsdata = googleapis_1.google.analyticsdata({ version: 'v1beta', auth });
             const property = `properties/${propertyId}`;
             const [currentRes, priorRes] = await Promise.all([
@@ -57,7 +61,8 @@ let AnalyticsService = AnalyticsService_1 = class AnalyticsService {
             return { traffic, growth, leads };
         }
         catch (e) {
-            this.logger.warn(`GA4 runReport failed for property ${propertyId}: ${e.message}`);
+            this.lastError = e.message;
+            this.logger.warn(`GA4 runReport failed for property ${propertyId}: ${this.lastError}`);
             return null;
         }
     }
@@ -142,4 +147,3 @@ exports.AnalyticsService = AnalyticsService = AnalyticsService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [google_auth_client_service_1.GoogleAuthClientService])
 ], AnalyticsService);
-//# sourceMappingURL=analytics.service.js.map

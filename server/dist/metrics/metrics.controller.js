@@ -65,4 +65,3 @@ exports.MetricsController = MetricsController = __decorate([
     (0, common_1.UseGuards)(session_auth_guard_1.SessionAuthGuard),
     __metadata("design:paramtypes", [metrics_service_1.MetricsService])
 ], MetricsController);
-//# sourceMappingURL=metrics.controller.js.map

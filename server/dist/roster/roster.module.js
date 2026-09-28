@@ -23,4 +23,3 @@ exports.RosterModule = RosterModule = __decorate([
         providers: [roster_service_1.RosterService],
     })
 ], RosterModule);
-//# sourceMappingURL=roster.module.js.map

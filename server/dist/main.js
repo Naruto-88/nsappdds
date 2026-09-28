@@ -26,4 +26,3 @@ async function bootstrap() {
     console.log(`NestJS server running on http://localhost:${port}`);
 }
 bootstrap();
-//# sourceMappingURL=main.js.map

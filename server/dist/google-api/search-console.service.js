@@ -17,14 +17,18 @@ const google_auth_client_service_1 = require("./google-auth-client.service");
 let SearchConsoleService = SearchConsoleService_1 = class SearchConsoleService {
     googleAuth;
     logger = new common_1.Logger(SearchConsoleService_1.name);
+    lastError = null;
     constructor(googleAuth) {
         this.googleAuth = googleAuth;
     }
     async getTotals(siteUrl, startDate, endDate) {
         const auth = this.googleAuth.getAuthorizedClient();
-        if (!auth)
+        if (!auth) {
+            this.lastError = this.googleAuth.lastError || 'No authorized Google client';
             return null;
+        }
         try {
+            this.lastError = null;
             const searchconsole = googleapis_1.google.searchconsole({ version: 'v1', auth });
             const res = await searchconsole.searchanalytics.query({
                 siteUrl,
@@ -40,7 +44,8 @@ let SearchConsoleService = SearchConsoleService_1 = class SearchConsoleService {
             };
         }
         catch (e) {
-            this.logger.warn(`GSC query failed for ${siteUrl}: ${e.message}`);
+            this.lastError = e.message;
+            this.logger.warn(`GSC query failed for ${siteUrl}: ${this.lastError}`);
             return null;
         }
     }
@@ -67,4 +72,3 @@ exports.SearchConsoleService = SearchConsoleService = SearchConsoleService_1 = _
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [google_auth_client_service_1.GoogleAuthClientService])
 ], SearchConsoleService);
-//# sourceMappingURL=search-console.service.js.map

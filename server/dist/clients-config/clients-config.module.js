@@ -18,4 +18,3 @@ exports.ClientsConfigModule = ClientsConfigModule = __decorate([
         exports: [clients_config_service_1.ClientsConfigService],
     })
 ], ClientsConfigModule);
-//# sourceMappingURL=clients-config.module.js.map

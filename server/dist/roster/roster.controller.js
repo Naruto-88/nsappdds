@@ -52,4 +52,3 @@ exports.RosterController = RosterController = __decorate([
     __metadata("design:paramtypes", [roster_service_1.RosterService,
         analytics_service_1.AnalyticsService])
 ], RosterController);
-//# sourceMappingURL=roster.controller.js.map

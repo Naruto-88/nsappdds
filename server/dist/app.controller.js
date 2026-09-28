@@ -70,4 +70,3 @@ exports.AppController = AppController = __decorate([
         config_1.ConfigService,
         clients_config_service_1.ClientsConfigService])
 ], AppController);
-//# sourceMappingURL=app.controller.js.map

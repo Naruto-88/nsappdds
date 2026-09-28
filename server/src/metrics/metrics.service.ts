@@ -16,6 +16,7 @@ export interface SeoMetricsResponse {
   sessions: number | null; // GA4, whole-property (not organic-only) — "Website Sessions"
   engagementRate: number | null; // GA4, whole-property, %
   bounceRate: number | null; // GA4, whole-property, %
+  debug?: any;
 }
 
 export interface AdsMetricsResponse {
@@ -99,6 +100,12 @@ export class MetricsService {
       sessions: ga4Site ? ga4Site.sessions : null,
       engagementRate: ga4Site ? ga4Site.engagementRate : null,
       bounceRate: ga4Site ? ga4Site.bounceRate : null,
+      debug: {
+        gscSiteUrl: mapping?.gscSiteUrl || null,
+        ga4PropertyId: ga4PropertyId || null,
+        gscError: this.searchConsole.lastError,
+        ga4Error: this.analytics.lastError,
+      },
     };
   }
 

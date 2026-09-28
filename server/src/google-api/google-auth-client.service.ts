@@ -12,6 +12,8 @@ import { TokenStoreService } from '../auth/token-store.service';
 export class GoogleAuthClientService {
   private readonly logger = new Logger(GoogleAuthClientService.name);
 
+  public lastError: string | null = null;
+
   constructor(
     private readonly config: ConfigService,
     private readonly tokenStore: TokenStoreService,
@@ -29,7 +31,16 @@ export class GoogleAuthClientService {
   // login-gate flow yet (AuthService.handleCallback populates the token store).
   getAuthorizedClient() {
     const connection = this.tokenStore.get();
-    if (!connection) return null;
+    if (!connection) {
+      this.lastError = 'TokenStore returned null (no google-connection.json)';
+      return null;
+    }
+    const clientId = this.config.get<string>('GOOGLE_CLIENT_ID');
+    if (!clientId) {
+      this.lastError = 'GOOGLE_CLIENT_ID is missing in env';
+      return null;
+    }
+    this.lastError = null;
 
     const client = this.buildOAuth2Client();
     client.setCredentials({

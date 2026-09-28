@@ -24,4 +24,3 @@ exports.GoogleApiModule = GoogleApiModule = __decorate([
         exports: [search_console_service_1.SearchConsoleService, analytics_service_1.AnalyticsService, google_ads_service_1.GoogleAdsService, meta_ads_service_1.MetaAdsService],
     })
 ], GoogleApiModule);
-//# sourceMappingURL=google-api.module.js.map

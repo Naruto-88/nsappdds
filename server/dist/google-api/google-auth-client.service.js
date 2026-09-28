@@ -19,6 +19,7 @@ let GoogleAuthClientService = GoogleAuthClientService_1 = class GoogleAuthClient
     config;
     tokenStore;
     logger = new common_1.Logger(GoogleAuthClientService_1.name);
+    lastError = null;
     constructor(config, tokenStore) {
         this.config = config;
         this.tokenStore = tokenStore;
@@ -28,8 +29,16 @@ let GoogleAuthClientService = GoogleAuthClientService_1 = class GoogleAuthClient
     }
     getAuthorizedClient() {
         const connection = this.tokenStore.get();
-        if (!connection)
+        if (!connection) {
+            this.lastError = 'TokenStore returned null (no google-connection.json)';
             return null;
+        }
+        const clientId = this.config.get('GOOGLE_CLIENT_ID');
+        if (!clientId) {
+            this.lastError = 'GOOGLE_CLIENT_ID is missing in env';
+            return null;
+        }
+        this.lastError = null;
         const client = this.buildOAuth2Client();
         client.setCredentials({
             access_token: connection.accessToken,
@@ -57,4 +66,3 @@ exports.GoogleAuthClientService = GoogleAuthClientService = GoogleAuthClientServ
     __metadata("design:paramtypes", [config_1.ConfigService,
         token_store_service_1.TokenStoreService])
 ], GoogleAuthClientService);
-//# sourceMappingURL=google-auth-client.service.js.map

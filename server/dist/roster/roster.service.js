@@ -57,4 +57,3 @@ exports.RosterService = RosterService = RosterService_1 = __decorate([
     __metadata("design:paramtypes", [clients_config_service_1.ClientsConfigService,
         analytics_service_1.AnalyticsService])
 ], RosterService);
-//# sourceMappingURL=roster.service.js.map

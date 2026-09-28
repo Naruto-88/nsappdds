@@ -61,4 +61,3 @@ function priorPeriodDateRange(period, today = new Date()) {
     priorStart.setDate(priorStart.getDate() - (lengthDays - 1));
     return { start: toIsoDate(priorStart), end: toIsoDate(priorEnd) };
 }
-//# sourceMappingURL=period.util.js.map

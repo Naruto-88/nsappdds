@@ -17,13 +17,19 @@ export interface SearchConsoleTotals {
 export class SearchConsoleService {
   private readonly logger = new Logger(SearchConsoleService.name);
 
+  public lastError: string | null = null;
+
   constructor(private readonly googleAuth: GoogleAuthClientService) {}
 
   async getTotals(siteUrl: string, startDate: string, endDate: string): Promise<SearchConsoleTotals | null> {
     const auth = this.googleAuth.getAuthorizedClient();
-    if (!auth) return null;
+    if (!auth) {
+      this.lastError = this.googleAuth.lastError || 'No authorized Google client';
+      return null;
+    }
 
     try {
+      this.lastError = null;
       const searchconsole = google.searchconsole({ version: 'v1', auth });
       const res = await searchconsole.searchanalytics.query({
         siteUrl,
@@ -40,7 +46,8 @@ export class SearchConsoleService {
         position: row.position ?? null,
       };
     } catch (e) {
-      this.logger.warn(`GSC query failed for ${siteUrl}: ${(e as Error).message}`);
+      this.lastError = (e as Error).message;
+      this.logger.warn(`GSC query failed for ${siteUrl}: ${this.lastError}`);
       return null;
     }
   }

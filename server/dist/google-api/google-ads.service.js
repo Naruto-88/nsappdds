@@ -123,4 +123,3 @@ exports.GoogleAdsService = GoogleAdsService = GoogleAdsService_1 = __decorate([
     __metadata("design:paramtypes", [config_1.ConfigService,
         google_auth_client_service_1.GoogleAuthClientService])
 ], GoogleAdsService);
-//# sourceMappingURL=google-ads.service.js.map
