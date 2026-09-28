@@ -56,7 +56,7 @@ export class AuthService {
 
     return client.generateAuthUrl({
       access_type: 'offline',
-      prompt: hasRefreshToken ? 'select_account' : 'consent',
+      prompt: 'consent select_account',
       scope: SCOPES,
       redirect_uri: uri,
       client_id: clientId,

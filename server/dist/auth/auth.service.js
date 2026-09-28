@@ -80,7 +80,7 @@ let AuthService = AuthService_1 = class AuthService {
         const hasRefreshToken = !!this.tokenStore.get()?.refreshToken;
         return client.generateAuthUrl({
             access_type: 'offline',
-            prompt: hasRefreshToken ? 'select_account' : 'consent',
+            prompt: 'consent select_account',
             scope: SCOPES,
             redirect_uri: uri,
             client_id: clientId,
