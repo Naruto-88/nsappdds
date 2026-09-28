@@ -82,6 +82,17 @@ export class ClientsConfigService {
     }
   }
 
+  async fetchGvizTab(tabName: string): Promise<any> {
+    const sheetId = this.config.get<string>('CONFIG_SHEET_ID');
+    if (!sheetId) throw new Error('CONFIG_SHEET_ID not set');
+    const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(tabName.trim())}&range=A1:CZ500&_cb=${Date.now()}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`gviz HTTP ${res.status}`);
+    const text = await res.text();
+    if (!text.includes('google.visualization')) throw new Error(`Tab "${tabName}" not found`);
+    return JSON.parse(text.replace(/^[^{]*/, '').replace(/[^}]*$/, ''));
+  }
+
   private async fetchConfigRows(sheetId: string): Promise<{ rows: string[][]; colLabels: string[] }> {
     const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=_CONFIG&range=A1:CZ500&_cb=${Date.now()}`;
     const res = await fetch(url);

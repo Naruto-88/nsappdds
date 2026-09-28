@@ -2446,31 +2446,7 @@ function clearAudit(){auditLog=[];renderAuditLog();}
 //  loads CLIENTS roster + RULES thresholds from _CONFIG tab)
 // ══════════════════════════════════════════════════════════════
 
-// Fetch a single tab as gviz JSON
-async function fetchTab(tabName){
-  if(!SHEET_CFG.sheetId)throw new Error('No Sheet ID configured. Go to Governance and paste your Sheet ID.');
-  const sheetId=SHEET_CFG.sheetId.trim().replace(/\//g,'');
-  const encoded=encodeURIComponent(tabName.trim());
-  // Two important parameters:
-  //  1. &_cb=<timestamp>  — cache-bust: defeats CDN/proxy caching serving stale data
-  //  2. &range=A1:CZ500   — explicit range: WITHOUT this, gviz auto-detects the data
-  //     range and TRUNCATES at the first contiguous block of blank rows. This silently
-  //     dropped LEADS and ACTIVITY LOG sections for client tabs that had blank rows
-  //     between Performance Metrics and the LEADS banner (extenda, sydneydecking).
-  //     With an explicit range, gviz returns every row in the range regardless of gaps.
-  //     A1:CZ500 covers 500 rows × 104 columns — generous margin over the widest tab.
-  const url=`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encoded}&range=A1:CZ500&_cb=${Date.now()}`;
-  let res;
-  try{ res=await fetch(url,{mode:'cors',cache:'no-store'}); }
-  catch(e){ throw new Error(`Network error for tab "${tabName}" — check Sheet is shared as "Anyone with the link can view". (${e.message})`); }
-  if(!res.ok) throw new Error(`HTTP ${res.status} fetching "${tabName}" — check Sheet ID`);
-  const text=await res.text();
-  if(!text.includes('google.visualization'))
-    throw new Error(`Tab "${tabName}" not found — check tab name matches Client ID exactly`);
-  try{ return JSON.parse(text.replace(/^[^{]*/,'').replace(/[^}]*$/,'')); }
-  catch(e){ throw new Error(`Could not parse response for tab "${tabName}"`); }
-}
-
+// Fetch a single tab as gviz JSON (backend proxy with JSONP fallback)
 function fetchTabJsonp(url,tabName){
   return new Promise((resolve,reject)=>{
     const cb='__nsSheetCb_'+Date.now()+'_'+Math.random().toString(36).slice(2);
@@ -2491,9 +2467,20 @@ function fetchTabJsonp(url,tabName){
 
 async function fetchTab(tabName){
   if(!SHEET_CFG.sheetId)throw new Error('No Sheet ID configured. Go to Governance and paste your Sheet ID.');
+  const encoded=encodeURIComponent(tabName.trim());
+
+  // 1. Backend proxy first: same-origin, 100% reliable, immune to CORS and ad-blockers
+  try{
+    const res=await fetch(`${BACKEND_URL}/api/sheet/tab?name=${encoded}`,{credentials:'include'});
+    if(res.ok){
+      const data=await res.json();
+      if(data && data.table) return data;
+    }
+  }catch(e){}
+
+  // 2. Direct JSONP fallback
   const sheetId=extractSheetId(SHEET_CFG.sheetId);
   if(!sheetId)throw new Error('Invalid Google Sheet ID. Paste the Sheet ID or full Google Sheets URL.');
-  const encoded=encodeURIComponent(tabName.trim());
   const json=await fetchTabJsonp(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?sheet=${encoded}&range=A1:CZ500`,tabName);
   if(!json||json.status==='error')throw new Error(`Tab "${tabName}" not found - check tab name matches Client ID exactly`);
   if(!json.table)throw new Error(`Could not parse response for tab "${tabName}"`);
@@ -2576,8 +2563,8 @@ function emptyDashboardPeriod(){
 
 // Convert gviz rows to array of arrays (each cell → its formatted or raw value)
 function rowsFromGviz(json){
-  if(!json.table||!json.table.rows)return[];
-  return json.table.rows.map(r=>r.c.map(c=>c?(c.f!==undefined?c.f:c.v!==undefined?c.v:''):''));
+  if(!json||!json.table||!json.table.rows)return[];
+  return json.table.rows.map(r=>(r&&r.c?r.c:[]).map(c=>c?(c.f!==undefined?c.f:c.v!==undefined?c.v:''):''));
 }
 
 function startOfLocalDay(d){
@@ -3486,6 +3473,7 @@ function computeHealth(client, period){
 // the next recognised header row, a section banner, or end of sheet.
 async function loadConfigTab(){
   const json=await fetchTab('_CONFIG');
+  if(!json||!json.table) throw new Error('Invalid _CONFIG table data');
   let rows=rowsFromGviz(json);
 
   // gviz quirk: when the first sheet row is a merged title/banner, gviz sometimes
@@ -3807,26 +3795,35 @@ async function loadRoster(){
       addAudit('at-alert','Roster is empty — check _CONFIG has client rows and that the connected Google account has Search Console access to at least one property.');
       return false;
     }
-    const{clients:cfgClients,rules:cfgRules,benchmarks:cfgBench,wins:cfgWins}=await loadConfigTab();
-    // Rebuild CLIENTS array
+
+    // Populate CLIENTS immediately from /api/roster so the dashboard displays instantly
     CLIENTS.length=0;
     entries.forEach((entry,i)=>CLIENTS.push(buildClientFromConfig(entry,i)));
-    // Prefer the freshly-fetched gviz baselines over the backend's /api/roster copy
-    // (which is cached up to 5 min) so a just-edited _CONFIG value shows immediately.
-    applyConfigBaselines(cfgClients);
-    const rulesApplied=applyRulesConfig(cfgRules);
-    // Store benchmarks and wins globally for the Intelligence layer
-    BENCHMARKS = cfgBench || [];
-    WINS = cfgWins || [];
-    const matchedCount=entries.filter(e=>e.matched).length;
-    addAudit('at-sync',`Roster loaded: ${entries.length} clients (${matchedCount} from _CONFIG, ${entries.length-matchedCount} auto-discovered from Search Console), ${rulesApplied} rule thresholds, ${BENCHMARKS.length} benchmarks, ${WINS.length} wins`);
-    // Re-populate client selectors and redraw
     ['driClientSel','cfSel'].forEach(id=>{const s=document.getElementById(id);if(!s)return;s.innerHTML='';CLIENTS.forEach(c=>{const o=document.createElement('option');o.value=c.id;o.textContent=c.name;s.appendChild(o);});});
     CUR=0;
+    if(typeof buildNav==='function')buildNav();
     buildCEO();
-    // Refresh the Intelligence tab panels if the render functions exist
-    if(typeof renderBenchmarks==='function')renderBenchmarks();
-    if(typeof renderWinsLibrary==='function')renderWinsLibrary();
+
+    // Prefer the freshly-fetched gviz baselines over the backend's /api/roster copy
+    // (which is cached up to 5 min) so a just-edited _CONFIG value shows immediately.
+    try{
+      const cfg=await loadConfigTab();
+      if(cfg){
+        if(cfg.clients)applyConfigBaselines(cfg.clients);
+        const rulesApplied=cfg.rules?applyRulesConfig(cfg.rules):0;
+        BENCHMARKS = cfg.benchmarks || [];
+        WINS = cfg.wins || [];
+        const matchedCount=entries.filter(e=>e.matched).length;
+        addAudit('at-sync',`Roster loaded: ${entries.length} clients (${matchedCount} from _CONFIG, ${entries.length-matchedCount} auto-discovered from Search Console), ${rulesApplied} rule thresholds, ${BENCHMARKS.length} benchmarks, ${WINS.length} wins`);
+        buildCEO();
+        if(typeof renderBenchmarks==='function')renderBenchmarks();
+        if(typeof renderWinsLibrary==='function')renderWinsLibrary();
+      }
+    }catch(cfgErr){
+      console.warn('Config tab load warning:',cfgErr);
+      addAudit('at-action',`Roster populated with ${entries.length} clients (${entries.filter(e=>e.matched).length} mapped). _CONFIG tab note: ${cfgErr.message}`);
+    }
+
     return true;
   }catch(e){
     addAudit('at-alert',`Roster load failed: ${e.message}`);

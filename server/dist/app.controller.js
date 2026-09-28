@@ -18,12 +18,15 @@ const config_1 = require("@nestjs/config");
 const path_1 = require("path");
 const app_service_1 = require("./app.service");
 const session_auth_guard_1 = require("./auth/session-auth.guard");
+const clients_config_service_1 = require("./clients-config/clients-config.service");
 let AppController = class AppController {
     appService;
     config;
-    constructor(appService, config) {
+    clientsConfig;
+    constructor(appService, config, clientsConfig) {
         this.appService = appService;
         this.config = config;
+        this.clientsConfig = clientsConfig;
     }
     getIndex(res) {
         const indexPath = (0, path_1.join)(__dirname, '..', '..', 'index.html');
@@ -31,6 +34,11 @@ let AppController = class AppController {
     }
     getConfig() {
         return { sheetId: this.config.get('CONFIG_SHEET_ID') || null };
+    }
+    async getSheetTab(tabName) {
+        if (!tabName)
+            throw new common_1.BadRequestException('Tab name required');
+        return this.clientsConfig.fetchGvizTab(tabName);
     }
 };
 exports.AppController = AppController;
@@ -48,9 +56,18 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], AppController.prototype, "getConfig", null);
+__decorate([
+    (0, common_1.Get)(['api/sheet/tab', 'home/api/sheet/tab']),
+    (0, common_1.UseGuards)(session_auth_guard_1.SessionAuthGuard),
+    __param(0, (0, common_1.Query)('name')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], AppController.prototype, "getSheetTab", null);
 exports.AppController = AppController = __decorate([
     (0, common_1.Controller)(),
     __metadata("design:paramtypes", [app_service_1.AppService,
-        config_1.ConfigService])
+        config_1.ConfigService,
+        clients_config_service_1.ClientsConfigService])
 ], AppController);
 //# sourceMappingURL=app.controller.js.map

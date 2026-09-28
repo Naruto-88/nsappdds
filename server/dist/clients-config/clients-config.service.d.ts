@@ -31,6 +31,7 @@ export declare class ClientsConfigService {
     getMapping(sheetKey: string): Promise<ClientConfigRow | null>;
     getMappingBySiteUrl(gscSiteUrl: string): Promise<ClientConfigRow | null>;
     getAllRows(): Promise<ClientConfigRow[]>;
+    fetchGvizTab(tabName: string): Promise<any>;
     private fetchConfigRows;
     private parseClientRows;
 }
