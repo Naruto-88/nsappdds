@@ -52,9 +52,11 @@ export class AuthService {
     const client = new google.auth.OAuth2(clientId, clientSecret, uri);
     const hd = this.config.get<string>('ALLOWED_HD') || process.env.ALLOWED_HD;
     
+    const hasRefreshToken = !!this.tokenStore.get()?.refreshToken;
+
     return client.generateAuthUrl({
       access_type: 'offline',
-      prompt: 'consent',
+      prompt: hasRefreshToken ? 'select_account' : 'consent',
       scope: SCOPES,
       redirect_uri: uri,
       client_id: clientId,

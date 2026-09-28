@@ -88,12 +88,15 @@ body{background:var(--bg);font-family:var(--fb);color:var(--dk);min-height:100vh
 .rag.g{background:#E1F5EE;color:#0F6E56}.rag.a{background:#FAEEDA;color:#854F0B}.rag.r{background:#FCEBEB;color:#A32D2D}
 .rdot{width:6px;height:6px;border-radius:50%}
 .rag.g .rdot{background:var(--grn)}.rag.a .rdot{background:var(--amb)}.rag.r .rdot{background:var(--red)}
+/* Channel-status dot for the CEO portfolio table (green/amber/red = On Target/Watch/At Risk) */
+.ch-dot{display:inline-block;width:11px;height:11px;border-radius:50%;vertical-align:middle}
 
 /* ── TABLE ── */
 .tbl-wrap{background:var(--card);border-radius:10px;border:1px solid var(--border);overflow:hidden}
 .tbl{width:100%;border-collapse:collapse;font-size:11px}
 .tbl th{background:var(--dk);color:var(--teal);font-family:var(--fh);font-weight:700;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:9px 11px;text-align:left;white-space:nowrap}
 .tbl th.r{text-align:right}
+.tbl th.chcol,.tbl td.chcol{text-align:center}
 .tbl td{padding:9px 11px;border-bottom:1px solid var(--ow);vertical-align:middle}
 .tbl tr:last-child td{border-bottom:none}
 .tbl tr:hover td{background:var(--ow);cursor:pointer}
@@ -320,6 +323,7 @@ body{background:var(--bg);font-family:var(--fb);color:var(--dk);min-height:100vh
   <div class="tb-r">
     <select class="per-sel" id="gPer" onchange="setPeriod(this.value)">
       <option value="week" selected>This Week</option>
+      <option value="lastweek">Last Week</option>
       <option value="week2">Last 2 Weeks</option>
       <option value="week3">Last 3 Weeks</option>
       <option value="month">This Month</option>
@@ -393,9 +397,7 @@ body{background:var(--bg);font-family:var(--fb);color:var(--dk);min-height:100vh
   <div class="eyebrow" style="margin-bottom:6px" id="portfolioFunnelTitle">Portfolio Lead Funnel — This Week</div>
   <div class="funnel-row" style="margin-bottom:12px" id="portfolioFunnel">
     <div class="f-stage"><div class="f-lbl">Total Leads</div><div class="f-val" id="pf-leads">—</div><div class="f-base" id="pf-leads-base"></div><div class="f-arr">›</div></div>
-    <div class="f-stage"><div class="f-lbl">Qualified Leads</div><div class="f-val" id="pf-qual">—</div><div class="f-base" id="pf-qual-base"></div><div class="f-arr">›</div></div>
     <div class="f-stage"><div class="f-lbl">Clients Won</div><div class="f-val" id="pf-won">—</div><div class="f-base" id="pf-won-base"></div><div class="f-arr">›</div></div>
-    <div class="f-stage"><div class="f-lbl">Paid CPL</div><div class="f-val" id="pf-paidcpl">—</div><div class="f-base">Google + Meta</div><div class="f-arr">›</div></div>
     <div class="f-stage"><div class="f-lbl">Total CPL</div><div class="f-val" id="pf-totalcpl">—</div><div class="f-base">incl. SEO (free)</div></div>
   </div>
 
@@ -403,11 +405,10 @@ body{background:var(--bg);font-family:var(--fb);color:var(--dk);min-height:100vh
   <div class="tbl-wrap" style="margin-bottom:12px">
     <table class="tbl">
       <thead><tr>
-        <th>Client</th><th>RAG</th><th>Freshness</th><th>Quality</th>
+        <th>Client</th><th>Client Retention</th><th class="chcol">SEO</th><th class="chcol">Google Ads</th><th class="chcol">Meta Ads</th>
         <th class="r">Leads</th>
-        <th class="r">Qual Leads</th><th class="r">CPL</th>
         <th class="r">vs Baseline</th><th class="r">ROAS</th>
-        <th class="r">Rules Fired</th><th class="r">Health</th><th></th>
+        <th class="r">Health</th><th></th>
       </tr></thead>
       <tbody id="masterBody"></tbody>
     </table>
@@ -446,6 +447,7 @@ body{background:var(--bg);font-family:var(--fb);color:var(--dk);min-height:100vh
     <div><div class="eyebrow">DRI Operations</div><div class="sec-title" id="driTitle">Select a Client</div></div>
     <div class="per-tabs">
       <button class="active" onclick="setCP('week',this)">Week</button>
+      <button onclick="setCP('lastweek',this)">Last Week</button>
       <button onclick="setCP('week2',this)">2 Weeks</button>
       <button onclick="setCP('week3',this)">3 Weeks</button>
       <button onclick="setCP('month',this)">Month</button>
@@ -472,13 +474,11 @@ body{background:var(--bg);font-family:var(--fb);color:var(--dk);min-height:100vh
 
   <!-- LEAD-FIRST KPI strip -->
   <div class="eyebrow" style="margin-bottom:6px">Lead Engine — Lead-First View</div>
-  <div class="g6" style="margin-bottom:12px">
+  <div class="g4" style="margin-bottom:12px">
     <div class="kpi tl"><div class="kpi-lbl">Total Leads</div><div class="kpi-val" id="dri-leads">—</div><div class="kpi-vs-base"><div class="vs-bar"><div class="vs-fill" id="dri-leads-bar" style="background:var(--grn)"></div></div></div><div class="kpi-base" id="dri-leads-base">vs baseline</div></div>
-    <div class="kpi pu"><div class="kpi-lbl">Qualified Leads</div><div class="kpi-val" id="dri-ql">—</div><div class="kpi-vs-base"><div class="vs-bar"><div class="vs-fill" id="dri-ql-bar" style="background:#8B5CF6"></div></div></div><div class="kpi-base" id="dri-ql-base">vs baseline</div></div>
     <div class="kpi or"><div class="kpi-lbl">CPL</div><div class="kpi-val" id="dri-cpl">—</div><div class="kpi-base" id="dri-cpl-base">baseline</div></div>
     <div class="kpi tl"><div class="kpi-lbl">Conv Rate</div><div class="kpi-val" id="dri-conv">—</div><div class="kpi-base" id="dri-conv-base">baseline</div></div>
     <div class="kpi gn"><div class="kpi-lbl">ROAS</div><div class="kpi-val" id="dri-roas">—</div><div class="kpi-base">Portfolio avg: 3.9x</div></div>
-    <div class="kpi am"><div class="kpi-lbl">Org Traffic</div><div class="kpi-val" id="dri-traffic">—</div><div class="kpi-base" id="dri-traffic-base">baseline</div></div>
   </div>
 
   <!-- Insights + Actions side by side -->
@@ -747,6 +747,16 @@ let CLIENTS = [];
 //  STATE
 // ══════════════════════════════════════════════════════════════
 let AUD='ceo', PERIOD='week', CUR=0, editActIdx=0, editActClient=0, CURVIEW='ceo';
+// Short-lived cache (60s) of per-client live Ads/Meta responses, so the CEO
+// portfolio table's channel-status columns can match the DRI view without
+// re-hitting the APIs on every re-render / filter click. { 'kind|sheetKey|period': {at, v} }
+const CH_STATUS_CACHE=new Map();
+function fetchChStatusData(kind,sheetKey,period){
+  const key=kind+'|'+sheetKey+'|'+period, hit=CH_STATUS_CACHE.get(key);
+  if(hit && Date.now()-hit.at<60000) return Promise.resolve(hit.v);
+  return (kind==='ads'?fetchAdsFromGoogle:fetchMetaFromApi)(sheetKey,period)
+    .then(v=>{ CH_STATUS_CACHE.set(key,{at:Date.now(),v}); return v; });
+}
 let auditLog=[], sheetData={};
 let charts={};
 const BM={'1-5m':{cpl:60,roas:2.5,conv:2.0,eng:2.5,tg:15},'5-20m':{cpl:50,roas:3.0,conv:2.5,eng:3.0,tg:10},'20-50m':{cpl:40,roas:4.0,conv:3.0,eng:3.5,tg:8},'50m+':{cpl:30,roas:5.0,conv:3.5,eng:4.0,tg:5}};
@@ -761,6 +771,14 @@ function tagH(v,warn,good,dir='hi'){const n=parseFloat(v);if(isNaN(n))return`<sp
 function setBadge(id,score){const r=score>=70?'g':score>=45?'a':'r';const m={g:{l:'On Track',bg:'#0F6E56'},a:{l:'Watch',bg:'#854F0B'},r:{l:'At Risk',bg:'#A32D2D'}};const el=document.getElementById(id);if(!el)return;el.textContent=m[r].l;el.style.cssText=`background:${m[r].bg};color:#fff;border-radius:7px;font-size:9px;padding:2px 7px;font-family:var(--fh);font-weight:700`;}
 function addAudit(type,desc){auditLog.unshift({time:new Date().toLocaleTimeString('en-AU',{hour:'2-digit',minute:'2-digit'}),type,desc});renderAuditLog();}
 function pct(a,b){return b?Math.round((a/b)*100):0;}
+// CRO "Conv Rate" = SEO/Organic leads ÷ sessions for the period, as a % (2 dp).
+// Null when sessions is 0 (the rate is undefined, not 0). Shared by the CRO card's
+// sync render, its live overlay, and the aggregate so every surface agrees.
+function organicConvRate(seoLeads,sessions){
+  const l=Number(seoLeads)||0, s=Number(sessions)||0;
+  if(s<=0)return null;
+  return Math.round((l/s)*10000)/100;
+}
 function vsBase(actual,baseline,lowerBetter=false){const r=(actual/baseline)*100;const good=lowerBetter?r<=100:r>=100;const warn=lowerBetter?r<=120:r>=80;return{pct:Math.min(100,lowerBetter?Math.max(0,200-r):r),color:good?'var(--grn)':warn?'var(--amb)':'var(--red)',label:lowerBetter?(r<=100?'On target':r<=120?'Watch':'Above'):r>=100?'On target':r>=80?'Watch':'Below'};}
 function cplBaselineStatus(actual,baseline){
   const a=Number(actual), b=Number(baseline);
@@ -805,6 +823,77 @@ function channelHasNoData(actual,channelKey){
   const empty=emptyDashboardPeriod()[channelKey];
   return Object.keys(empty).every(k=>String(actual[k])===String(empty[k]));
 }
+// ── PER-CHANNEL STATUS — single source of truth ─────────────────────────────
+// Both the DRI channel-card status badge AND the CEO portfolio table cell go
+// through these, so the two views can never disagree. Each returns
+// 'g' | 'a' | 'r' | ''  ('' = show a dash: no data / nothing to judge against).
+//
+// SEO: SEO/Organic Leads vs the period-scaled SEO baseline. This is a manual
+// (Sheet) metric — the live /seo overlay deliberately never touches the badge —
+// so there is no live variant.
+// - No "Baseline SEO Leads" in _CONFIG → SEO isn't a service we run for this
+//   client → show NO status ('').
+// - Has a baseline but ZERO organic leads this period → At Risk ('r'): a real
+//   SEO target with nothing delivered against it, NOT "no data".
+// - Otherwise judge organic leads vs the period-scaled baseline as usual.
+function seoChannelRag(c,d,p){
+  const seoBase=c&&c.baselines?c.baselines.seoLeads:null;
+  if(seoBase==null||!(seoBase>0))return '';
+  if(!d||!d.seo)return '';
+  const leads=Number(d.seo.leads)||0;
+  if(leads<=0)return 'r';
+  return seoLeadsBaselineRag(leads,Math.round(scaledSeoBaseline(seoBase,p)));
+}
+// Shared judgement for a paid channel (Google Ads, Meta Ads):
+//   count  = the MANUAL Sheet figure — Google Ads Conversions / Meta Leads
+//   live   = the API response ({spend,clicks,conversions,reach,...}) or null
+//   sheetSpend / sheetCpl = the display strings from the period aggregate
+// Spend is taken live when the API returned it, otherwise from the Sheet — so a
+// client whose ad data only exists live (no G Ads / Meta columns in the Sheet)
+// is still judged. Then:
+// - count > 0  → CPL (live spend ÷ count, else the Sheet CPL) vs `base`, exactly
+//                as applyGoogleAdsOverlay / applyMetaAdsOverlay compute it.
+// - count = 0, spend > 0 → cost-per-conversion/lead is UNDEFINED (not $0), and
+//                money went out with nothing to show for it → At Risk ('r').
+// - no spend from either source and no conversions/leads → not running it → ''.
+function paidChannelRag(base,count,live,sheetSpend,sheetCpl){
+  const n=Number(count)||0;
+  const liveSpend=(live&&live.spend!=null)?Number(live.spend):null;
+  const shSpend=parseFloat(String(sheetSpend||'').replace(/[$,]/g,''));
+  const spend=liveSpend!=null?liveSpend:(isFinite(shSpend)?shSpend:0);
+  if(n>0){
+    let cplNum=liveSpend!=null?liveSpend/n:null;
+    if(cplNum==null){
+      const s=parseFloat(String(sheetCpl||'').replace(/[$,]/g,''));
+      cplNum = (isFinite(s)&&s>0) ? s : (spend>0?spend/n:null);
+    }
+    if(cplNum!=null)return cplBenchmarkRag(cplNum,base);
+  }
+  return spend>0?'r':'';
+}
+// Google Ads: judged on cost per (manual Sheet) conversion vs the Google CPL
+// benchmark. Pass g=null for the Sheet-only judgement.
+function gadsChannelRag(c,d,p,g){
+  if(!d||!d.gads)return '';
+  const gBase=(c.baselines.googleCPL!=null&&c.baselines.googleCPL>0)?c.baselines.googleCPL:c.baselines.cpl;
+  return paidChannelRag(gBase,d.gads.conv,g,d.gads.spend,d.gads.cpl);
+}
+// Meta Ads: judged on cost per (manual Sheet) lead vs the client's Meta CPL
+// benchmark. Pass m=null for the Sheet-only judgement.
+function metaChannelRag(c,d,p,m){
+  if(!d||!d.meta)return '';
+  return paidChannelRag(clientMetaCPLBaseline(c),d.meta.leads,m,d.meta.spend,d.meta.cpl);
+}
+// Table cell for a channel status: a single green / amber / red dot (On Target /
+// Watch / At Risk), or a muted dash when the rag is ''. The word is kept in the
+// hover tooltip so nothing is lost.
+const chStatusCell=r=>{
+  const m={g:{c:'var(--grn)',t:'On Target'},a:{c:'var(--amb)',t:'Watch'},r:{c:'var(--red)',t:'At Risk'}}[r];
+  return m ? `<span class="ch-dot" style="background:${m.c}" title="${m.t}"></span>`
+          : '<span style="color:var(--st)">—</span>';
+};
+// Sets a DRI card badge from a channel rag, applying the same dash treatment.
+function setBadgeRagOrDash(id,rag){ if(rag) setBadgeRag(id,rag); else setBadgeDash(id); }
 // Live SEO data for one client/period from the backend, which calls GSC (Avg
 // Position) and GA4 (Traffic/Growth/SEO Leads) using the tech@netstripes.com
 // session established via the login gate. Each field on the response is a number,
@@ -857,10 +946,17 @@ function applyGoogleCroOverlay(c,p,d,g){
     ? mrow('Bounce',g.bounceRate.toFixed(0)+'%',tagH(g.bounceRate,50,40,'lo'),'<55%')
     : mrow('Bounce',dash);
   const sessRow = g.sessions!=null ? mrow('Sessions',g.sessions.toLocaleString()) : mrow('Sessions',dash);
-  body.innerHTML = bounceRow
-    + mrow('Conv Rate',d.cro.conv+'%',tagH(d.cro.conv,c.baselines.conv*0.85,c.baselines.conv),c.baselines.conv+'%')
-    + sessRow
+  // Conv Rate = SEO/Organic leads ÷ sessions, using the LIVE GA4 session count now
+  // shown above (falls back to the Sheet total if the live call had none).
+  const liveSess = g.sessions!=null ? g.sessions : d.cro.sess;
+  const ocr = organicConvRate(d.seo.leads, liveSess);
+  const convRateRow = ocr==null
+    ? mrow('Conv Rate',dash)
+    : mrow('Conv Rate',ocr+'%',tagH(ocr,c.baselines.conv*0.85,c.baselines.conv),c.baselines.conv+'%');
+  body.innerHTML = bounceRow + convRateRow + sessRow
     + mrow('A/B Tests',d.cro.tests)+mrow('Avg Time',d.cro.time);
+  const kpiConv=document.getElementById('dri-conv');
+  if(kpiConv)kpiConv.textContent=ocr==null?'—':ocr+'%';
   if(g.bounceRate!=null){
     const score=g.bounceRate<35?90:g.bounceRate<45?70:g.bounceRate<55?50:25;
     setBadge('cro-badge',score);
@@ -912,56 +1008,64 @@ function applyMetaAdsOverlay(c,p,d,mBase,mBenchTxt,m){
   const body=document.getElementById('meta-body');
   if(!body||!m)return;
   const dash='<span style="color:var(--st)">-</span>';
-  const cplNum = (m.spend!=null && m.leads!=null && m.leads>0) ? m.spend/m.leads : (m.cpl!=null ? m.cpl : null);
+  // Leads is entered by hand in the sheet's "Meta Leads" column (d.meta.leads) —
+  // the live Meta API lead count (m.leads) is deliberately ignored here so the
+  // manual figure is never overwritten. Every other Meta row stays API-sourced.
+  // CPL follows from the manual number: API spend ÷ manual leads (dash when there
+  // are no manual leads, since cost-per-lead is undefined then).
+  const manualLeads = (d && d.meta && d.meta.leads!=null) ? d.meta.leads : null;
+  const cplNum = (m.spend!=null && manualLeads!=null && manualLeads>0) ? m.spend/manualLeads : null;
   const cplRow = cplNum!=null
     ? mrow('CPL',cpl(cplNum),tagH(cplNum,mBase,mBase*0.8,'lo'),'$'+mBase)
     : mrow('CPL',dash);
   const spendRow = m.spend!=null ? mrow('Spend','$'+Math.round(m.spend)) : mrow('Spend',dash);
   const reachRow = m.reach!=null ? mrow('Reach',m.reach.toLocaleString()) : mrow('Reach',dash);
-  const leadsRow = m.leads!=null ? mrow('Leads',m.leads) : mrow('Leads',dash);
+  const leadsRow = mrow('Leads', manualLeads!=null ? manualLeads : dash);
   const freqRow = m.frequency!=null ? mrow('Ad Frequency',m.frequency.toFixed(2)) : mrow('Ad Frequency',dash);
   const ctrRow = m.ctr!=null ? mrow('CTR',m.ctr.toFixed(2)+'%') : mrow('CTR',dash);
   
   body.innerHTML = cplRow+mrow('Meta Benchmark',mBenchTxt)+spendRow+reachRow+leadsRow+freqRow+ctrRow;
-  if(cplNum!=null) setBadgeRag('meta-badge',cplBenchmarkRag(cplNum,mBase));
+  setBadgeRagOrDash('meta-badge',metaChannelRag(c,d,p,m));
 }
-// Overlays live Google Ads data onto the already-rendered Google Ads card. CPL here
-// is computed client-side as spend/conversions (the Ads API has no single "CPL"
-// metric) — null whenever conversions is 0 or the whole call failed, so a $0 CPL is
-// never fabricated from a divide-by-zero.
+// Overlays live Google Ads data onto the already-rendered Google Ads card.
+// Conversions is entered by hand in the sheet's "G Ads Conversions" column
+// (d.gads.conv) — the live API conversion count (g.conversions) is deliberately
+// ignored here so the manual figure is never overwritten. Every other Google Ads
+// row stays API-sourced. CPL follows from the manual number: API spend ÷ manual
+// conversions (dash when there are none, since cost-per-conversion is undefined).
 function applyGoogleAdsOverlay(c,p,d,gBase,gBenchTxt,g){
   if(CURVIEW!=='dri'||CLIENTS[CUR]!==c||PERIOD!==p)return;
   const body=document.getElementById('gads-body');
   if(!body)return;
   const dash='<span style="color:var(--st)">-</span>';
-  const cplNum = (g.spend!=null && g.conversions!=null && g.conversions>0) ? g.spend/g.conversions : null;
+  const manualConv = (d && d.gads && d.gads.conv!=null) ? d.gads.conv : null;
+  const cplNum = (g.spend!=null && manualConv!=null && manualConv>0) ? g.spend/manualConv : null;
   const cplRow = cplNum!=null
     ? mrow('CPL',cpl(cplNum),tagH(cplNum,gBase,gBase*0.8,'lo'),'$'+gBase)
     : mrow('CPL',dash);
   const roasRow = g.roas!=null
     ? mrow('ROAS',roasStr(g.roas),tagH(g.roas,c.baselines.roas,c.baselines.roas*1.2),c.baselines.roas+'x')
     : mrow('ROAS',dash);
+  const spendRow = g.spend!=null ? mrow('Spend',money(g.spend)) : mrow('Spend',dash);
   const clicksRow = g.clicks!=null ? mrow('Clicks',g.clicks) : mrow('Clicks',dash);
   const qsRow = g.qualityScore!=null ? mrow('Quality Score',g.qualityScore) : mrow('Quality Score',dash);
-  const convRow = g.conversions!=null ? mrow('Conversions',g.conversions) : mrow('Conversions',dash);
-  body.innerHTML = cplRow+mrow('Google Benchmark',gBenchTxt)+roasRow+clicksRow+qsRow+convRow;
-  if(cplNum!=null) setBadgeRag('gads-badge',cplBenchmarkRag(cplNum,gBase));
-  else if(g.spend==null&&g.clicks==null&&g.conversions==null) setBadgeDash('gads-badge');
+  const convRow = mrow('Conversions', manualConv!=null ? manualConv : dash);
+  body.innerHTML = cplRow+mrow('Google Benchmark',gBenchTxt)+spendRow+roasRow+clicksRow+qsRow+convRow;
+  setBadgeRagOrDash('gads-badge',gadsChannelRag(c,d,p,g));
 }
 // Recomputes the DRI KPI strip's Total Leads/CPL and the funnel's Total
-// Leads/Paid CPL/Total CPL stages using the LIVE Google Ads conversions+spend in
-// place of the Sheet's "G Ads Conversions"/"G Ads Spend" columns — the rest of the
-// blend (Meta leads/spend, SEO/Organic leads) stays exactly as Sheet-sourced today,
-// per instruction (Meta is always manual; SEO/Organic Leads was explicitly asked
-// to stay manual too). If Google Ads isn't connected (g.spend/conversions null),
-// this is a no-op and the Sheet-based figures already on screen are left alone —
-// never replaced with a guess.
+// Leads/Paid CPL/Total CPL stages. Google Ads SPEND is taken live from the API;
+// Google Ads CONVERSIONS is taken from the Sheet's "G Ads Conversions" column
+// (entered by hand), matching the Google Ads card. Meta leads/spend and
+// SEO/Organic leads stay Sheet-sourced too. If Google Ads spend isn't available
+// (API not connected), this is a no-op and the Sheet-based figures already on
+// screen are left alone — never replaced with a guess.
 function applyLiveLeadsCplOverlay(c,p,d,g){
   if(CURVIEW!=='dri'||CLIENTS[CUR]!==c||PERIOD!==p)return;
-  if(g.spend==null||g.conversions==null)return;
+  if(g.spend==null)return;
 
   const mSpend=d.raw.mSpend||0, mLeads=d.raw.mLeads||0, seoLeads=d.fn.seoLeads||0;
-  const gConv=g.conversions, gSpend=g.spend;
+  const gConv=d.raw.gConv||0, gSpend=g.spend;
   const totalLeads=gConv+mLeads+seoLeads;
   const paidLeads=gConv+mLeads;
   const paidSpend=gSpend+mSpend;
@@ -1045,9 +1149,10 @@ function formatRangeTooltip(range){
 
 function updatePeriodTooltips(){
   const now=new Date();
-  const periods=['week','week2','week3','month','q90'];
+  const periods=['week','lastweek','week2','week3','month','q90'];
   const titles={
     week: 'This Week: ' + formatRangeTooltip(periodDateRange('week',now)),
+    lastweek: 'Last Week: ' + formatRangeTooltip(periodDateRange('lastweek',now)),
     week2: 'Last 2 Weeks: ' + formatRangeTooltip(periodDateRange('week2',now)),
     week3: 'Last 3 Weeks: ' + formatRangeTooltip(periodDateRange('week3',now)),
     month: 'This Month: ' + formatRangeTooltip(periodDateRange('month',now)),
@@ -1074,7 +1179,7 @@ function setPeriod(p){
   // Sync the global dropdown
   const g=document.getElementById('gPer'); if(g)g.value=p;
   // Sync the DRI period tabs
-  const idx={week:0,week2:1,week3:2,month:3,q90:4}[p]; const useIdx=(idx===undefined?0:idx);
+  const idx={week:0,lastweek:1,week2:2,week3:3,month:4,q90:5}[p]; const useIdx=(idx===undefined?0:idx);
   document.querySelectorAll('.per-tabs button').forEach((b,i)=>b.classList.toggle('active',i===useIdx));
   updatePeriodTooltips();
   // Re-render the active view
@@ -1084,11 +1189,11 @@ function setCP(p,btn){
   setPeriod(p);
 }
 function periodLabel(p){
-  return p==='week'?'This Week':p==='week2'?'Last 2 Weeks':p==='week3'?'Last 3 Weeks':p==='month'?'This Month':p==='q90'?'90 Days':'Selected Period';
+  return p==='week'?'This Week':p==='lastweek'?'Last Week':p==='week2'?'Last 2 Weeks':p==='week3'?'Last 3 Weeks':p==='month'?'This Month':p==='q90'?'90 Days':'Selected Period';
 }
 function periodKeyForClientPeriod(client,periodObj){
   if(!client)return PERIOD;
-  return ['week','week2','week3','month','q90'].find(k=>client[k]===periodObj)||PERIOD;
+  return ['week','lastweek','week2','week3','month','q90'].find(k=>client[k]===periodObj)||PERIOD;
 }
 function clientMetaCPLBaseline(c){
   const v=c&&c.baselines?Number(c.baselines.metaCPL):0;
@@ -1151,9 +1256,7 @@ function buildPortfolioFunnel(){
   const totalCPL = allLeads>0 ? paidSpend/allLeads : null;
   const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
   set('pf-leads',leads); set('pf-leads-base',CLIENTS.length+' clients');
-  set('pf-qual',qual); set('pf-qual-base',leads>0?Math.round(qual/leads*100)+'% qual rate':'');
   set('pf-won',won); set('pf-won-base',qual>0?Math.round(won/qual*100)+'% close':'');
-  set('pf-paidcpl',paidCPL!=null?cpl(paidCPL):'—');
   set('pf-totalcpl',totalCPL!=null?cpl(totalCPL):'—');
 }
 
@@ -1164,7 +1267,7 @@ function buildMasterTable(data){
     const msg=ROSTER_LOAD_STATE==='loaded'
       ?'No clients loaded — configure Sheet ID in Governance.'
       :'Loading clients from Google Sheet…';
-    document.getElementById('masterBody').innerHTML=`<tr><td colspan="12" style="text-align:center;padding:24px;color:var(--st);font-family:var(--fb);font-size:12px">${msg}</td></tr>`;
+    document.getElementById('masterBody').innerHTML=`<tr><td colspan="10" style="text-align:center;padding:24px;color:var(--st);font-family:var(--fb);font-size:12px">${msg}</td></tr>`;
     return;
   }
   const leadRagForClient=c=>{
@@ -1180,30 +1283,49 @@ function buildMasterTable(data){
     const cplNum=(d.blended&&d.blended.cplValue!==null&&d.blended.cplValue!==undefined)?d.blended.cplValue:parseFloat((d.gads.cpl||'999').replace('$',''));
     const cplDisplay=(d.blended&&d.blended.cpl)?d.blended.cpl:d.gads.cpl;
     const roasNum=parseFloat((d.gads.roas||'0').replace('x',''));
-    const fired=runRules(c,p);
+    runRules(c,p); // keeps each rule's per-render fired count (shown in the Governance rules table) up to date
     const leadsBase=scaledBaseline(c.baselines.leads,p);
     const leadPct=leadsBase>0?pct(d.fn.leads,leadsBase):0;
     const leadRag=leadBaselineRag(d.fn.leads,leadsBase);
     const cplVs=cplBaselineStatus(cplNum,c.baselines.cpl);
-    const freshCol=c.freshness.score>=80?'var(--grn)':c.freshness.score>=60?'var(--amb)':'var(--red)';
-    const qualCol=c.quality.score>=80?'var(--grn)':c.quality.score>=60?'var(--amb)':'var(--red)';
-    const qualRate=d.fn.leads>0?Math.round(d.fn.qual/d.fn.leads*100):0;
     return`<tr onclick="openClient(${c.id})">
       <td><div class="cname">${c.name}</div><div class="ctier">${c.tier} · ${c.revTier}</div></td>
       <td>${leadRagH(leadRag)}</td>
-      <td><span class="tag" style="background:${freshCol}22;color:${freshCol}">${c.freshness.score}/100</span></td>
-      <td><span class="tag" style="background:${qualCol}22;color:${qualCol}">${c.quality.score}/100</span></td>
+      <td class="chcol" id="ms-${c.id}-seo">${chStatusCell(seoChannelRag(c,d,p))}</td>
+      <td class="chcol" id="ms-${c.id}-gads">${chStatusCell(gadsChannelRag(c,d,p,null))}</td>
+      <td class="chcol" id="ms-${c.id}-meta">${chStatusCell(metaChannelRag(c,d,p,null))}</td>
       <td class="num"><strong>${d.fn.leads}</strong><div style="font-size:9px;color:${leadPct>=100?'var(--grn)':leadPct>=80?'var(--amb)':'var(--red)'}">${leadPct}% of ${Math.round(leadsBase)}</div></td>
-      <td class="num">${d.fn.qual}<div style="font-size:9px;color:var(--st)">${qualRate}% qual rate</div></td>
-      <td class="num">${tagH(cplNum,c.baselines.cpl,c.baselines.cpl*0.8,'lo')} ${cplDisplay}</td>
       <td class="num"><span class="tag ${cplVs.tag}">${cplVs.label}</span><div style="font-size:9px;color:var(--st)">${cplDisplay} vs Base: $${c.baselines.cpl}</div></td>
       <td class="num">${roasNum>0?tagH(roasNum,c.baselines.roas,c.baselines.roas*1.2)+' '+d.gads.roas:'<span style="color:var(--st)">—</span>'}</td>
-      <td class="num"><span class="tag ${fired.length===0?'g':fired.some(f=>f.urgency==='critical'||f.urgency==='high')?'r':'a'}">${fired.length} rules</span></td>
       <td class="num"><div style="display:flex;align-items:center;gap:4px"><div class="health-bar" style="flex:1"><div class="health-fill" style="width:${c.health}%;background:${c.rag==='g'?'var(--grn)':c.rag==='a'?'var(--amb)':'var(--red)'}"></div></div>${c.health}</div></td>
       <td><button class="btn pri xs" onclick="event.stopPropagation();openClient(${c.id})">Detail →</button></td>
     </tr>`;
   }).join('');
   document.getElementById('rowCount')||null;
+
+  // The Google Ads / Meta Ads status pills above are the Sheet-only judgement.
+  // The DRI channel cards refine that with live API data (CPL = live spend ÷
+  // manual Conversions/Leads), so to keep the two views identical we make the
+  // same per-client calls here and re-judge each cell through the SAME shared
+  // functions (gadsChannelRag / metaChannelRag) the DRI badges now use. SEO is
+  // Sheet-only in both views, so it needs no call. Guarded so a slow response
+  // that lands after the user changed period / left the view is ignored.
+  const period=PERIOD;
+  data.forEach(c=>{
+    if(!c.sheetKey)return;
+    const d=c[period];
+    if(!d)return;
+    fetchChStatusData('ads',c.sheetKey,period).then(g=>{
+      if(!g||CURVIEW!=='ceo'||PERIOD!==period)return;
+      const el=document.getElementById('ms-'+c.id+'-gads');
+      if(el)el.innerHTML=chStatusCell(gadsChannelRag(c,d,period,g));
+    });
+    fetchChStatusData('meta',c.sheetKey,period).then(m=>{
+      if(!m||CURVIEW!=='ceo'||PERIOD!==period)return;
+      const el=document.getElementById('ms-'+c.id+'-meta');
+      if(el)el.innerHTML=chStatusCell(metaChannelRag(c,d,period,m));
+    });
+  });
 }
 
 function filterMaster(v){
@@ -1776,7 +1898,7 @@ function openClient(id){
   sAN('dri');
   // Keep both period controls reflecting the preserved PERIOD (no longer forced to month)
   const g=document.getElementById('gPer'); if(g)g.value=PERIOD;
-  const idx={week:0,week2:1,week3:2,month:3,q90:4}[PERIOD]; const useIdx=(idx===undefined?0:idx);
+  const idx={week:0,lastweek:1,week2:2,week3:3,month:4,q90:5}[PERIOD]; const useIdx=(idx===undefined?0:idx);
   document.querySelectorAll('.per-tabs button').forEach((b,i)=>b.classList.toggle('active',i===useIdx));
 }
 function setCP(p,btn){setPeriod(p);}
@@ -1815,14 +1937,11 @@ function renderDRI(){
     if(baseEl)baseEl.textContent=`Base: ${lowerBetter?'≤$':'≥'}${baseline}`;
   };
   setKPI('dri-leads',d.fn.leads,Math.round(scaledBaseline(c.baselines.leads,p)));
-  setKPI('dri-ql',d.fn.qual,Math.round(scaledBaseline(c.baselines.qualLeads,p)));
   setKPI('dri-cpl',paidCPLText,c.baselines.cpl,true);
   document.getElementById('dri-cpl-base').textContent=`Base: ≤$${c.baselines.cpl}`;
   document.getElementById('dri-conv').textContent=d.cro.conv+'%';
   document.getElementById('dri-conv-base').textContent=`Base: ≥${c.baselines.conv}%`;
   document.getElementById('dri-roas').textContent=d.gads.roas;
-  document.getElementById('dri-traffic').textContent=d.seo.traffic.toLocaleString();
-  document.getElementById('dri-traffic-base').textContent=`Base: ≥${c.baselines.traffic.toLocaleString()}`;
 
   // Rules fired count
   document.getElementById('rulesFiredCount').textContent=fired.length+' rules fired';
@@ -1858,7 +1977,7 @@ function renderDRI(){
     return 60;
   };
   const seoLeadsBase=Math.round((c.baselines.seoLeads!=null&&c.baselines.seoLeads>0)?scaledSeoBaseline(c.baselines.seoLeads,p):scaledBaseline(c.baselines.leads,p));
-  if(channelHasNoData(d.seo,'seo'))setBadgeDash('seo-badge');else setBadgeRag('seo-badge',seoLeadsBaselineRag(d.seo.leads,seoLeadsBase));
+  setBadgeRagOrDash('seo-badge',seoChannelRag(c,d,p));
   document.getElementById('seo-body').innerHTML=mrow('Traffic',d.seo.traffic.toLocaleString(),tagH(d.seo.traffic,c.baselines.traffic*0.9,c.baselines.traffic),c.baselines.traffic.toLocaleString())+mrow('Growth',d.seo.growth)+mrow('Impressions','<span style="color:var(--st)">-</span>')+mrow('SEO/Organic Leads',d.seo.leads,tagH(d.seo.leads,seoLeadsBase-2,seoLeadsBase),seoLeadsBase)+mrow('Avg Position',d.seo.pos)+mrow('Domain Authority',d.seo.da)+mrow('New Backlinks',d.cont.bl);
   // Once the backend responds with live GSC/GA4 numbers, overlay them onto the card
   // just rendered above. Traffic/Growth/SEO Leads/Avg Position become Google-sourced;
@@ -1872,14 +1991,14 @@ function renderDRI(){
   });
   // Google Ads badge judged against the configured Google Ads benchmark CPL.
   const gBase = (c.baselines.googleCPL!=null && c.baselines.googleCPL>0) ? c.baselines.googleCPL : c.baselines.cpl;
-  const gCPLActual=parseFloat((d.gads.cpl||'999').replace(/[$,]/g,''));
-  if(channelHasNoData(d.gads,'gads'))setBadgeDash('gads-badge');else setBadgeRag('gads-badge',cplBenchmarkRag(gCPLActual,gBase));
+  setBadgeRagOrDash('gads-badge',gadsChannelRag(c,d,p,null));
   const gBench = benchmarkForVertical(c.vertical);
   const gBenchTxt = gBench && gBench.googleCPLMin!=null && gBench.googleCPLMax!=null
       ? `$${gBench.googleCPLMin}–${gBench.googleCPLMax}` : ('$'+gBase);
   document.getElementById('gads-body').innerHTML=
       mrow('CPL',d.gads.cpl,tagH(parseFloat((d.gads.cpl||'999').replace(/[$,]/g,'')),gBase,gBase*0.8,'lo'),'$'+gBase)
     + mrow('Google Benchmark', gBenchTxt)
+    + mrow('Spend',d.gads.spend)
     + mrow('ROAS',d.gads.roas,tagH(parseFloat((d.gads.roas||'0').replace('x','')),c.baselines.roas,c.baselines.roas*1.2),c.baselines.roas+'x')
     + mrow('Clicks',d.gads.clicks)+mrow('Quality Score',d.gads.qs)+mrow('Conversions',d.gads.conv);
   fetchAdsFromGoogle(c.sheetKey,p).then(g=>{
@@ -1890,8 +2009,7 @@ function renderDRI(){
   // Meta CPL benchmark is the client-specific Baseline Meta CPL from _CONFIG,
   // matched by Client ID/sheetKey. Vertical benchmark ranges are not used here.
   const metaBase = clientMetaCPLBaseline(c);
-  const metaCPLActual=parseFloat((d.meta.cpl||'999').replace(/[$,]/g,''));
-  if(channelHasNoData(d.meta,'meta'))setBadgeDash('meta-badge');else setBadgeRag('meta-badge',cplBenchmarkRag(metaCPLActual,metaBase));
+  setBadgeRagOrDash('meta-badge',metaChannelRag(c,d,p,null));
   const metaBenchTxt = metaBase?('$'+metaBase):'—';
   const metaCPLTag = (d.meta.cpl!=='—' && metaBase)
       ? tagH(parseFloat((d.meta.cpl||'999').replace(/[$,]/g,'')), metaBase*1.1, metaBase,'lo') : '';
@@ -2343,7 +2461,7 @@ function num(v){
 const WEEKS_PER_MONTH=4.33;
 function scaledBaseline(monthlyValue, period){
   const v=Number(monthlyValue)||0;
-  if(period==='week')return v/WEEKS_PER_MONTH;
+  if(period==='week'||period==='lastweek')return v/WEEKS_PER_MONTH;
   if(period==='week2')return v/WEEKS_PER_MONTH*2;
   if(period==='week3')return v/WEEKS_PER_MONTH*3;
   if(period==='q90')return v*3;
@@ -2355,7 +2473,7 @@ function scaledBaseline(monthlyValue, period){
 // showing the raw monthly figure.
 function scaledSeoBaseline(monthlyValue, period){
   const v=Number(monthlyValue)||0;
-  if(period==='week')return v/4;
+  if(period==='week'||period==='lastweek')return v/4;
   if(period==='week2')return v/4*2;
   if(period==='week3')return v/4*3;
   if(period==='q90')return v*3;
@@ -2455,6 +2573,13 @@ function periodDateRange(period,today){
   if(period==='week'){
     return{start:startOfCalendarWeek(now),end:endOfCalendarWeek(now),type:'week'};
   }
+  if(period==='lastweek'){
+    // The full previous calendar week (Sunday-Saturday), not a rolling window —
+    // reference a day 7 days back and take that whole week.
+    const ref=startOfLocalDay(now);
+    ref.setDate(ref.getDate()-7);
+    return{start:startOfCalendarWeek(ref),end:endOfCalendarWeek(ref),type:'week'};
+  }
   if(period==='week2'){
     const start=startOfCalendarWeek(now);
     start.setDate(start.getDate()-7);
@@ -2477,19 +2602,25 @@ function periodDateRange(period,today){
 
 function dateInPeriodRange(date,range){
   if(!date||!range)return false;
-  if(date>=range.start && date<=range.end)return true;
-  // Some sheets store the weekly reporting row on the following Sunday even though
-  // the business week is Sunday-Saturday. Include that Sunday marker for week filters.
   if(range.type==='week'){
+    // "Week Ending" dates mark the LAST day of their week. The dashboard week runs
+    // Sunday-Saturday, so a row dated exactly on the starting Sunday is the marker
+    // for the PREVIOUS week, not this one — exclude it (strict >), and let the
+    // trailing Sunday marker below cover this week instead. Without this, a sheet
+    // that dates rows on Sundays gets each week counted from both its leading and
+    // trailing Sunday, double-counting the prior week's row into the current one.
+    if(date>range.start && date<=range.end)return true;
     const sundayMarker=endOfLocalDay(range.end);
     sundayMarker.setDate(sundayMarker.getDate()+1);
     return date>range.end && date<=sundayMarker;
   }
-  return false;
+  // Non-week ranges (rolling 90-day, calendar month): a row dated exactly on the
+  // range start is legitimately in range, so keep the inclusive lower bound.
+  return date>=range.start && date<=range.end;
 }
 
 function periodFallbackWeeks(period){
-  if(period==='week')return 1;
+  if(period==='week'||period==='lastweek')return 1;
   if(period==='week2')return 2;
   if(period==='week3')return 3;
   return period==='q90'?12:4;
@@ -3009,17 +3140,15 @@ function aggregatePeriod(metricsRows,period){
   const paidCPLval  = paidLeads>0 ? paidSpend/paidLeads : null;
   const totalCPLval = allLeads>0  ? paidSpend/allLeads  : null;
 
-  // ── CONV RATE GUARD ──────────────────────────────────────────
-  // Visitor→lead conv rate >100% is impossible — flag as a data error rather
-  // than presenting it as healthy. Flag if EITHER the period average OR any
-  // individual week in the period exceeds 100% (a single bad week shouldn't
-  // be hidden by averaging).
-  const convRaw = Math.round(avgWebConv*100)/100;   // round to 2 decimals (was showing 0.76477777…)
-  let anyWeekConvImpossible = false;
-  if(cWebConv>=0){
-    slice.forEach(r=>{ if(num(r.row[cWebConv])>100) anyWeekConvImpossible=true; });
-  }
-  const convSuspect = (convRaw > 100) || anyWeekConvImpossible;
+  // ── CONV RATE ────────────────────────────────────────────────
+  // Defined as SEO/Organic leads ÷ sessions for the period (%). Not read from the
+  // sheet's "Web Conv Rate" column. Zero sessions → rate is undefined → 0 here so
+  // downstream `+'%'` / parseFloat consumers stay simple; the CRO card's live
+  // overlay re-derives this against live GA4 sessions. >100% (more organic leads
+  // than sessions) is impossible → flagged as a data error.
+  const _ocr = organicConvRate(totalSeoLeads, totalSess);
+  const convRaw = _ocr==null ? 0 : _ocr;
+  const convSuspect = convRaw > 100;
 
   return{
     ns:{rev:totalRev?money(totalRev):'—', pipe:totalPipe?money(totalPipe):'—', cli:totalNewCli||0, mom:avgMoM?pctStr(avgMoM):'—', close:avgClose?avgClose.toFixed(1)+'%':'—'},
@@ -3056,7 +3185,7 @@ function aggregatePeriod(metricsRows,period){
 function applyPeriodsToClient(c,parsed){
   const m=parsed.metrics;
   if(!m.length)return false;
-  const periodKeys=['week','week2','week3','month','q90'];
+  const periodKeys=['week','lastweek','week2','week3','month','q90'];
   const periodRows={};
   const periodAggs={};
   periodKeys.forEach(periodKey=>{
@@ -3547,6 +3676,7 @@ function buildClientFromConfig(entry,existingIdx){
     quality:{score:0,missing:[]},
     narrative:entry.sheetKey?'Awaiting first sync. Click Sync All in Governance to pull live data.':'Auto-discovered from Search Console — add a _CONFIG row for this client to enable Sheet sync and baselines.',
     week:JSON.parse(JSON.stringify(emptyPeriod)),
+    lastweek:JSON.parse(JSON.stringify(emptyPeriod)),
     week2:JSON.parse(JSON.stringify(emptyPeriod)),
     week3:JSON.parse(JSON.stringify(emptyPeriod)),
     month:JSON.parse(JSON.stringify(emptyPeriod)),
@@ -3556,6 +3686,38 @@ function buildClientFromConfig(entry,existingIdx){
     sampleLeads:[],
     sampleActivity:{blogs:[],backlinks:[],social:[],creatives:[],driveUrl:''}
   };
+}
+
+// Refresh already-built CLIENTS' baselines (lead/qual targets, general + per-platform
+// CPL, ROAS, traffic) and vertical/DRI from a fresh _CONFIG parse — loadConfigTab()
+// reads gviz directly with a cache-bust, so this reflects a sheet edit immediately,
+// unlike the backend's /api/roster copy which is cached 5 min. Matched by sheetKey;
+// synced period data and the selected client are left untouched. Returns the count
+// of clients updated.
+function applyConfigBaselines(cfgClients){
+  if(!Array.isArray(cfgClients)||!cfgClients.length)return 0;
+  let n=0;
+  cfgClients.forEach(cc=>{
+    const c=CLIENTS.find(x=>x.sheetKey===cc.sheetKey);
+    if(!c)return;
+    c.baselines={
+      leads:cc.baselineLeads||0,
+      seoLeads:cc.baselineSeoLeads!=null?cc.baselineSeoLeads:null,
+      qualLeads:cc.baselineQual||0,
+      cpl:cc.baselineCPL||0,
+      conv:cc.baselineConv||0,
+      roas:cc.baselineRoas||0,
+      traffic:cc.baselineTraffic||0,
+      googleCPL:cc.baselineGoogleCPL||0,
+      metaCPL:cc.baselineMetaCPL!=null?cc.baselineMetaCPL:null
+    };
+    if(cc.vertical)c.vertical=cc.vertical;
+    if(cc.revTier)c.revTier=cc.revTier;
+    if(cc.driPrimary!=null)c.driPrimary=cc.driPrimary;
+    if(cc.driSecondary!=null)c.driSecondary=cc.driSecondary;
+    n++;
+  });
+  return n;
 }
 
 // Apply rules thresholds from _CONFIG to the RULES array
@@ -3589,10 +3751,13 @@ async function loadRoster(){
       addAudit('at-alert','Roster is empty — check _CONFIG has client rows and that the connected Google account has Search Console access to at least one property.');
       return false;
     }
-    const{rules:cfgRules,benchmarks:cfgBench,wins:cfgWins}=await loadConfigTab();
+    const{clients:cfgClients,rules:cfgRules,benchmarks:cfgBench,wins:cfgWins}=await loadConfigTab();
     // Rebuild CLIENTS array
     CLIENTS.length=0;
     entries.forEach((entry,i)=>CLIENTS.push(buildClientFromConfig(entry,i)));
+    // Prefer the freshly-fetched gviz baselines over the backend's /api/roster copy
+    // (which is cached up to 5 min) so a just-edited _CONFIG value shows immediately.
+    applyConfigBaselines(cfgClients);
     const rulesApplied=applyRulesConfig(cfgRules);
     // Store benchmarks and wins globally for the Intelligence layer
     BENCHMARKS = cfgBench || [];
@@ -3629,6 +3794,16 @@ async function syncClient(){
   const lbl=document.getElementById('driSyncLbl');
   if(dot)dot.className='sync-dot loading';
   try{
+    // Pull fresh _CONFIG baselines first (Baseline Google/Meta CPL, lead targets,
+    // etc.) — a sheet edit there won't show otherwise, as the steps below only
+    // refresh this client's weekly metric tab.
+    try{
+      const cfg=await loadConfigTab();
+      applyConfigBaselines(cfg.clients);
+      if(cfg.rules)applyRulesConfig(cfg.rules);
+      if(cfg.benchmarks)BENCHMARKS=cfg.benchmarks;
+      if(cfg.wins)WINS=cfg.wins;
+    }catch(e){ addAudit('at-alert',`Baseline refresh failed: ${e.message}`); }
     const json=await fetchTab(c.sheetKey);
     const parsed=parseClientTab(json);
     // ── DIAGNOSTICS (v9) — helps explain "synced but 0 leads". Open console to read.
@@ -3650,7 +3825,7 @@ async function syncClient(){
     console.groupEnd();
     applyPeriodsToClient(c,parsed);
     // Leads reconciliation check — confirms Total Leads = Google + Meta + SEO for each period.
-    ['week','week2','week3','month','q90'].forEach(pk=>{
+    ['week','lastweek','week2','week3','month','q90'].forEach(pk=>{
       const p=c[pk]; if(!p||!p.fn)return;
       const g=p.fn.gLeads||0, mt=p.fn.mLeads||0, s=p.fn.seoLeads||0, tot=p.fn.leads||0;
       const ok=(g+mt+s===tot);
@@ -3682,6 +3857,18 @@ async function syncAll(){
   const lbl=document.getElementById('ceoSyncLbl');
   if(dot)dot.className='sync-dot loading';
   if(lbl)lbl.textContent='Syncing all clients…';
+
+  // Re-read _CONFIG so a baseline edited in the sheet (Baseline Google/Meta CPL,
+  // lead targets, ROAS, vertical, DRI) is picked up — the metric-tab sync below
+  // only refreshes weekly performance data, not baselines.
+  try{
+    const cfg=await loadConfigTab();
+    const nb=applyConfigBaselines(cfg.clients);
+    if(cfg.rules)applyRulesConfig(cfg.rules);
+    if(cfg.benchmarks)BENCHMARKS=cfg.benchmarks;
+    if(cfg.wins)WINS=cfg.wins;
+    if(nb)addAudit('at-sync',`Baselines refreshed from _CONFIG for ${nb} client(s)`);
+  }catch(e){ addAudit('at-alert',`Baseline refresh failed: ${e.message}`); }
 
   // Parallel fetch with per-client outcome capture. Auto-discovered clients with
   // no _CONFIG row (c.sheetKey===null) have no Sheet tab to sync — skip them rather
@@ -3886,5 +4073,6 @@ function logoutUser(){
 
 init();
 </script>
+<!-- Test commit-->
 </body>
 </html>

@@ -1,4 +1,4 @@
-export type PeriodKey = 'week' | 'week2' | 'week3' | 'month' | 'q90';
+export type PeriodKey = 'week' | 'lastweek' | 'week2' | 'week3' | 'month' | 'q90';
 
 export interface DateRange {
   start: string; // YYYY-MM-DD
@@ -35,6 +35,12 @@ export function periodDateRange(period: PeriodKey, today: Date = new Date()): Da
 
   if (period === 'week') {
     return { start: toIsoDate(startOfCalendarWeek(now)), end: toIsoDate(endOfCalendarWeek(now)) };
+  }
+  if (period === 'lastweek') {
+    // The full previous calendar week (Sunday-Saturday) — mirrors index.html.
+    const ref = new Date(now);
+    ref.setDate(ref.getDate() - 7);
+    return { start: toIsoDate(startOfCalendarWeek(ref)), end: toIsoDate(endOfCalendarWeek(ref)) };
   }
   if (period === 'week2') {
     const start = startOfCalendarWeek(now);

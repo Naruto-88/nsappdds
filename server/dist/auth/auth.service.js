@@ -77,9 +77,10 @@ let AuthService = AuthService_1 = class AuthService {
         const uri = redirectUri || this.config.get('GOOGLE_REDIRECT_URI') || process.env.GOOGLE_REDIRECT_URI || 'https://nsapp.netstripes.au/home/auth/google/callback';
         const client = new googleapis_1.google.auth.OAuth2(clientId, clientSecret, uri);
         const hd = this.config.get('ALLOWED_HD') || process.env.ALLOWED_HD;
+        const hasRefreshToken = !!this.tokenStore.get()?.refreshToken;
         return client.generateAuthUrl({
             access_type: 'offline',
-            prompt: 'consent',
+            prompt: hasRefreshToken ? 'select_account' : 'consent',
             scope: SCOPES,
             redirect_uri: uri,
             client_id: clientId,

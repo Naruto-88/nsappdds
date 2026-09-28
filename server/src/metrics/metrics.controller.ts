@@ -3,7 +3,7 @@ import { SessionAuthGuard } from '../auth/session-auth.guard';
 import { MetricsService } from './metrics.service';
 import { PeriodKey } from './period.util';
 
-const VALID_PERIODS: PeriodKey[] = ['week', 'week2', 'week3', 'month', 'q90'];
+const VALID_PERIODS: PeriodKey[] = ['week', 'lastweek', 'week2', 'week3', 'month', 'q90'];
 
 @Controller(['api/clients', 'home/api/clients'])
 @UseGuards(SessionAuthGuard)
