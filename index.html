@@ -32,7 +32,7 @@ body{background:var(--bg);font-family:var(--fb);color:var(--dk);min-height:100vh
 .profile-menu{position:relative}
 .profile-btn{width:28px;height:28px;border-radius:50%;background:var(--mid);border:1px solid #2a5060;color:var(--teal);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
 .profile-btn:hover{background:#1d4c5c}
-.profile-dropdown{display:none;position:absolute;top:36px;right:0;background:var(--dk);border:1px solid var(--mid);border-radius:8px;padding:10px;min-width:200px;max-width:260px;z-index:250;box-shadow:0 8px 24px rgba(0,0,0,.35);overflow:hidden}
+.profile-dropdown{display:none;position:absolute;top:36px;right:0;background:var(--dk);border:1px solid var(--mid);border-radius:8px;padding:12px;min-width:260px;max-width:320px;z-index:250;box-shadow:0 8px 24px rgba(0,0,0,.35);overflow:hidden}
 .profile-dropdown.open{display:block}
 .profile-email{font-family:var(--fb);font-size:11px;color:var(--ow);padding:2px 4px 8px;border-bottom:1px solid var(--mid);margin-bottom:8px;word-break:break-all}
 .profile-logout-btn{width:100%;background:none;border:1px solid var(--mid);color:var(--red);font-family:var(--fh);font-weight:700;font-size:10px;letter-spacing:.5px;text-transform:uppercase;padding:7px;border-radius:6px;cursor:pointer;transition:all .15s}
@@ -344,16 +344,39 @@ body{background:var(--bg);font-family:var(--fb);color:var(--dk);min-height:100vh
     </select>
     <div style="font-family:var(--fh);font-weight:700;font-size:9px;color:var(--st);letter-spacing:.5px" id="clockDisplay"></div>
     <div style="font-family:var(--fh);font-weight:700;font-size:9px;color:var(--st);letter-spacing:.5px;opacity:.6" id="versionStamp" title="Dashboard build version">v12.1</div>
+    <div id="topbarGoogleBadge" onclick="toggleProfileMenu(event)" title="Google Connection Status — Click to view details" style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:12px;font-size:10px;font-family:var(--fh);font-weight:700;cursor:pointer;background:rgba(34,197,94,0.14);color:#22c55e;border:1px solid rgba(34,197,94,0.3);transition:all .15s">
+      <span id="topbarGoogleDot" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#22c55e;box-shadow:0 0 6px #22c55e"></span>
+      <span id="topbarGoogleText">Google: Connected</span>
+    </div>
     <div class="profile-menu" id="profileMenu">
       <button class="profile-btn" id="profileBtn" onclick="toggleProfileMenu(event)" title="Account" aria-label="Account menu">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
       </button>
       <div class="profile-dropdown" id="profileDropdown">
-        <div class="profile-email" id="profileEmail">—</div>
-        <div id="profileGoogleStatus" style="font-size:11px;color:var(--st);padding:6px 12px;border-top:1px solid #1a3d4a;display:flex;align-items:center;justify-content:space-between;gap:6px">
-          <span>Google: <strong id="profileGoogleLabel" style="color:var(--amb)">Checking...</strong></span>
-          <a href="javascript:void(0)" onclick="connectGoogleAccount()" id="profileGoogleLink" style="color:var(--teal);text-decoration:none;font-weight:700">Connect</a>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:8px;border-bottom:1px solid #1a3d4a;margin-bottom:10px">
+          <div>
+            <div style="font-family:var(--fh);font-size:9px;text-transform:uppercase;color:var(--st);font-weight:700;letter-spacing:.5px">Session Account</div>
+            <div class="profile-email" id="profileEmail" style="padding:2px 0 0 0;margin:0;border:none;font-weight:700;font-size:12px">Admin</div>
+          </div>
+          <span class="tag" style="background:rgba(42,80,96,0.5);color:var(--teal);font-size:9px;padding:2px 6px">Admin</span>
         </div>
+
+        <!-- Google Connection Status Card -->
+        <div style="padding:10px 12px;border-radius:6px;background:rgba(0,0,0,0.25);border:1px solid #1a3d4a;margin-bottom:10px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <span style="font-family:var(--fh);font-size:9px;text-transform:uppercase;color:var(--st);font-weight:700;letter-spacing:.5px">Google Connection</span>
+            <span id="profileGoogleStatusBadge" class="tag" style="background:rgba(34,197,94,0.2);color:#22c55e;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;display:flex;align-items:center;gap:4px">
+              <span id="profileGoogleDot" style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#22c55e"></span>
+              <span id="profileGoogleBadgeText">Connected</span>
+            </span>
+          </div>
+          <div id="profileGoogleAccountEmail" style="font-size:11px;color:var(--ow);font-weight:600;margin-bottom:4px;word-break:break-all">tech@netstripes.com</div>
+          <div id="profileGoogleSubtext" style="font-size:9px;color:var(--grn);margin-bottom:8px;line-height:1.3">Live GSC, GA4 & Google Ads data active</div>
+          <button onclick="connectGoogleAccount()" id="profileGoogleActionBtn" class="btn ghost sm" style="width:100%;justify-content:center;font-size:10px;padding:6px 8px;font-weight:700">
+            Reconnect / Switch Account
+          </button>
+        </div>
+
         <button class="profile-logout-btn" onclick="logoutUser()">Logout</button>
       </div>
     </div>
@@ -4057,23 +4080,69 @@ let CURRENT_USER_EMAIL='';
 let GOOGLE_CONNECTION_STATUS={ connected: false, email: '' };
 
 function updateGoogleUI(){
-  const profileLabel=document.getElementById('profileGoogleLabel');
-  const profileLink=document.getElementById('profileGoogleLink');
-  const govBadge=document.getElementById('govGoogleBadge');
-  const govText=document.getElementById('govGoogleStatusText');
-  const govBtn=document.getElementById('govConnectGoogleBtn');
-
   const isConn=!!GOOGLE_CONNECTION_STATUS.connected;
   const email=GOOGLE_CONNECTION_STATUS.email||'';
 
-  if(profileLabel){
-    profileLabel.textContent=isConn ? (email||'Connected') : 'Not Connected';
-    profileLabel.style.color=isConn ? 'var(--grn)' : 'var(--amb)';
-  }
-  if(profileLink){
-    profileLink.textContent=isConn ? 'Reconnect' : 'Connect';
+  // 1. Topbar Badge
+  const topbarBadge=document.getElementById('topbarGoogleBadge');
+  const topbarDot=document.getElementById('topbarGoogleDot');
+  const topbarText=document.getElementById('topbarGoogleText');
+  if(topbarBadge && topbarDot && topbarText){
+    if(isConn){
+      topbarBadge.style.background='rgba(34,197,94,0.14)';
+      topbarBadge.style.color='#22c55e';
+      topbarBadge.style.borderColor='rgba(34,197,94,0.3)';
+      topbarDot.style.background='#22c55e';
+      topbarDot.style.boxShadow='0 0 6px #22c55e';
+      topbarText.textContent='Google: Connected';
+    } else {
+      topbarBadge.style.background='rgba(239,68,68,0.14)';
+      topbarBadge.style.color='#ef4444';
+      topbarBadge.style.borderColor='rgba(239,68,68,0.3)';
+      topbarDot.style.background='#ef4444';
+      topbarDot.style.boxShadow='none';
+      topbarText.textContent='Google: Not Connected';
+    }
   }
 
+  // 2. Profile Dropdown Card
+  const profileBadge=document.getElementById('profileGoogleStatusBadge');
+  const profileDot=document.getElementById('profileGoogleDot');
+  const profileBadgeText=document.getElementById('profileGoogleBadgeText');
+  const profileEmail=document.getElementById('profileGoogleAccountEmail');
+  const profileSub=document.getElementById('profileGoogleSubtext');
+  const profileBtn=document.getElementById('profileGoogleActionBtn');
+
+  if(profileBadgeText && profileBadge && profileDot && profileEmail && profileSub && profileBtn){
+    if(isConn){
+      profileBadge.style.background='rgba(34,197,94,0.2)';
+      profileBadge.style.color='#22c55e';
+      profileDot.style.background='#22c55e';
+      profileBadgeText.textContent='Connected';
+      profileEmail.textContent=email || 'tech@netstripes.com';
+      profileEmail.style.color='var(--ow)';
+      profileSub.textContent='Live GSC, GA4 & Google Ads data active';
+      profileSub.style.color='var(--grn)';
+      profileBtn.textContent='Reconnect / Switch Account';
+      profileBtn.className='btn ghost sm';
+    } else {
+      profileBadge.style.background='rgba(239,68,68,0.2)';
+      profileBadge.style.color='#ef4444';
+      profileDot.style.background='#ef4444';
+      profileBadgeText.textContent='Not Connected';
+      profileEmail.textContent='No Google account linked';
+      profileEmail.style.color='var(--st)';
+      profileSub.textContent='Live API data requires connecting tech@netstripes.com';
+      profileSub.style.color='var(--amb)';
+      profileBtn.textContent='Connect Google Account';
+      profileBtn.className='btn teal sm';
+    }
+  }
+
+  // 3. Governance Card
+  const govBadge=document.getElementById('govGoogleBadge');
+  const govText=document.getElementById('govGoogleStatusText');
+  const govBtn=document.getElementById('govConnectGoogleBtn');
   if(govBadge){
     govBadge.textContent=isConn ? 'Connected' : 'Not Connected';
     govBadge.style.background=isConn ? 'rgba(34,197,94,0.18)' : 'rgba(239,68,68,0.18)';
@@ -4081,7 +4150,7 @@ function updateGoogleUI(){
   }
   if(govText){
     govText.innerHTML=isConn 
-      ? `Connected as <strong style="color:var(--teal)">${email}</strong>. Live API tokens active.`
+      ? `Connected as <strong style="color:var(--teal)">${email || 'tech@netstripes.com'}</strong>. Live API tokens active.`
       : `<span style="color:var(--amb)">Google connection not active. Live GSC/GA4/Google Ads metrics require connecting.</span>`;
   }
   if(govBtn){
