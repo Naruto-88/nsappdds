@@ -80,10 +80,34 @@ let AuthController = class AuthController {
             return this.renderResult(res, false, e.message);
         }
     }
+    adminLogin(req, res) {
+        const { username, password } = req.body || {};
+        const validUser = this.config.get('ADMIN_USERNAME') || 'Admin';
+        const validPass = this.config.get('ADMIN_PASSWORD') || 'Melaka@123#';
+        if (username === validUser && password === validPass) {
+            const token = this.authService.issueSessionToken({ email: `${validUser}@netstripes.com` });
+            const host = req.get('host') || '';
+            const isLocal = host.includes('localhost') || host.includes('127.0.0.1');
+            res.cookie(SESSION_COOKIE, token, {
+                httpOnly: true,
+                sameSite: 'lax',
+                secure: !isLocal && process.env.NODE_ENV === 'production',
+                maxAge: 30 * 24 * 60 * 60 * 1000,
+            });
+            return res.json({ ok: true, email: `${validUser}@netstripes.com` });
+        }
+        return res.status(401).json({ ok: false, error: 'Invalid username or password' });
+    }
+    googleStatus() {
+        return this.authService.getGoogleConnection();
+    }
     me(req) {
         const token = req.cookies?.[SESSION_COOKIE];
         const payload = token ? this.authService.verifySessionToken(token) : null;
-        return payload ? { authenticated: true, email: payload.email } : { authenticated: false };
+        const googleConn = this.authService.getGoogleConnection();
+        return payload
+            ? { authenticated: true, email: payload.email, googleConnected: googleConn.connected, googleEmail: googleConn.email }
+            : { authenticated: false, googleConnected: googleConn.connected, googleEmail: googleConn.email };
     }
     logout(res) {
         res.clearCookie(SESSION_COOKIE);
@@ -120,6 +144,20 @@ __decorate([
     __metadata("design:paramtypes", [String, String, String, Object, Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "callback", null);
+__decorate([
+    (0, common_1.Post)('admin/login'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "adminLogin", null);
+__decorate([
+    (0, common_1.Get)('google/status'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "googleStatus", null);
 __decorate([
     (0, common_1.Get)('me'),
     __param(0, (0, common_1.Req)()),

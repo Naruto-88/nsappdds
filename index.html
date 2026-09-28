@@ -299,10 +299,20 @@ body{background:var(--bg);font-family:var(--fb);color:var(--dk);min-height:100vh
 <div class="login-gate" id="loginGate">
   <div class="login-card">
     <div class="login-logo">net<em>Stripes</em></div>
-    <div class="login-sub">Decision System — sign in to continue</div>
-    <button class="login-google-btn" onclick="window.location.href=BACKEND_URL+'/auth/google/login?redirectUri='+encodeURIComponent(window.location.origin+(window.location.pathname.startsWith('/home')?'/home':'')+'/auth/google/callback')">
+    <div class="login-sub">Decision System — Admin Login</div>
+    <form id="adminLoginForm" onsubmit="handleAdminLogin(event)" style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px">
+      <input type="text" id="adminUser" class="form-input" placeholder="Username" required style="background:var(--card);color:var(--ow);border-color:#1c4250;padding:9px 12px;font-size:13px">
+      <input type="password" id="adminPass" class="form-input" placeholder="Password" required style="background:var(--card);color:var(--ow);border-color:#1c4250;padding:9px 12px;font-size:13px">
+      <button type="submit" class="btn pri" style="padding:10px;font-size:13px;font-weight:700;justify-content:center">Sign In</button>
+    </form>
+    <div style="display:flex;align-items:center;gap:10px;margin:12px 0">
+      <div style="flex:1;height:1px;background:#1a3d4a"></div>
+      <span style="font-family:var(--fh);font-size:10px;color:var(--st);text-transform:uppercase;letter-spacing:1px">Or Connect Google</span>
+      <div style="flex:1;height:1px;background:#1a3d4a"></div>
+    </div>
+    <button class="login-google-btn" onclick="connectGoogleAccount()">
       <svg width="16" height="16" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.5 6.1 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 15.9 18.9 13 24 13c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.5 6.1 29.5 4 24 4c-7.5 0-14 4.2-17.7 10.7z"/><path fill="#4CAF50" d="M24 44c5.4 0 10.3-2.1 14-5.5l-6.5-5.5C29.5 34.9 26.9 36 24 36c-5.3 0-9.7-3.3-11.3-8l-6.6 5.1C9.9 39.7 16.4 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.2-4.2 5.6l6.5 5.5C40.9 36 44 30.7 44 24c0-1.3-.1-2.7-.4-3.5z"/></svg>
-      Sign in with Google
+      Sign in with Google Account
     </button>
     <div class="login-msg" id="loginMsg"></div>
   </div>
@@ -340,6 +350,10 @@ body{background:var(--bg);font-family:var(--fb);color:var(--dk);min-height:100vh
       </button>
       <div class="profile-dropdown" id="profileDropdown">
         <div class="profile-email" id="profileEmail">—</div>
+        <div id="profileGoogleStatus" style="font-size:11px;color:var(--st);padding:6px 12px;border-top:1px solid #1a3d4a;display:flex;align-items:center;justify-content:space-between;gap:6px">
+          <span>Google: <strong id="profileGoogleLabel" style="color:var(--amb)">Checking...</strong></span>
+          <a href="javascript:void(0)" onclick="connectGoogleAccount()" id="profileGoogleLink" style="color:var(--teal);text-decoration:none;font-weight:700">Connect</a>
+        </div>
         <button class="profile-logout-btn" onclick="logoutUser()">Logout</button>
       </div>
     </div>
@@ -607,6 +621,24 @@ body{background:var(--bg);font-family:var(--fb);color:var(--dk);min-height:100vh
 
   <!-- Stale data alerts -->
   <div id="staleAlerts" style="margin-bottom:10px"></div>
+
+  <!-- Google Services Connection -->
+  <div class="form-section" style="margin-bottom:12px">
+    <div class="form-title" style="display:flex;justify-content:space-between;align-items:center">
+      <span>Google Services Connection (GSC / GA4 / Google Ads)</span>
+      <span id="govGoogleBadge" class="tag" style="background:#2a3b4c;color:#94a3b8;font-size:11px;padding:3px 8px">Checking...</span>
+    </div>
+    <div style="font-family:var(--fb);font-size:11px;color:var(--st);margin-bottom:10px">
+      Used by the Decision System to pull live metrics for Google Search Console, Google Analytics 4, and Google Ads. Once connected with <code style="color:var(--teal)">tech@netstripes.com</code>, tokens remain stored server-side and persistent across sessions.
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <button class="btn teal sm" onclick="connectGoogleAccount()" id="govConnectGoogleBtn">
+        <svg width="14" height="14" viewBox="0 0 48 48" style="vertical-align:middle;margin-right:4px"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.5 6.1 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 15.9 18.9 13 24 13c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.5 6.1 29.5 4 24 4c-7.5 0-14 4.2-17.7 10.7z"/><path fill="#4CAF50" d="M24 44c5.4 0 10.3-2.1 14-5.5l-6.5-5.5C29.5 34.9 26.9 36 24 36c-5.3 0-9.7-3.3-11.3-8l-6.6 5.1C9.9 39.7 16.4 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.2-4.2 5.6l6.5 5.5C40.9 36 44 30.7 44 24c0-1.3-.1-2.7-.4-3.5z"/></svg>
+        Connect / Re-authenticate Google
+      </button>
+      <div id="govGoogleStatusText" style="font-family:var(--fb);font-size:12px;color:var(--ow)"></div>
+    </div>
+  </div>
 
   <!-- Sheet config -->
   <div class="form-section" style="margin-bottom:12px">
@@ -2347,6 +2379,7 @@ function renderWinsLibrary(){
 // ══════════════════════════════════════════════════════════════
 function renderGov(){
   buildStaleAlerts();
+  updateGoogleUI();
   // Rules table
   document.getElementById('rulesBody').innerHTML=RULES.map(r=>`
     <tr>
@@ -4018,11 +4051,75 @@ function bootDashboard(){
   autoLoadSheetOnBoot();
 }
 
-// Gate the dashboard behind Google Sign-In (tech@netstripes.com) before booting.
-// The same backend session also authorizes the GSC/GA4 calls the SEO card uses —
-// see renderDRI()'s fetchSeoFromGoogle().
-// Filled in once /auth/me confirms a session — shown in the profile dropdown.
+// Gate the dashboard behind Admin Login or Google Sign-In before booting.
+// Stored Google connection authorizes the GSC/GA4/Ads calls the SEO card uses.
 let CURRENT_USER_EMAIL='';
+let GOOGLE_CONNECTION_STATUS={ connected: false, email: '' };
+
+function updateGoogleUI(){
+  const profileLabel=document.getElementById('profileGoogleLabel');
+  const profileLink=document.getElementById('profileGoogleLink');
+  const govBadge=document.getElementById('govGoogleBadge');
+  const govText=document.getElementById('govGoogleStatusText');
+  const govBtn=document.getElementById('govConnectGoogleBtn');
+
+  const isConn=!!GOOGLE_CONNECTION_STATUS.connected;
+  const email=GOOGLE_CONNECTION_STATUS.email||'';
+
+  if(profileLabel){
+    profileLabel.textContent=isConn ? (email||'Connected') : 'Not Connected';
+    profileLabel.style.color=isConn ? 'var(--grn)' : 'var(--amb)';
+  }
+  if(profileLink){
+    profileLink.textContent=isConn ? 'Reconnect' : 'Connect';
+  }
+
+  if(govBadge){
+    govBadge.textContent=isConn ? 'Connected' : 'Not Connected';
+    govBadge.style.background=isConn ? 'rgba(34,197,94,0.18)' : 'rgba(239,68,68,0.18)';
+    govBadge.style.color=isConn ? 'var(--grn)' : 'var(--red)';
+  }
+  if(govText){
+    govText.innerHTML=isConn 
+      ? `Connected as <strong style="color:var(--teal)">${email}</strong>. Live API tokens active.`
+      : `<span style="color:var(--amb)">Google connection not active. Live GSC/GA4/Google Ads metrics require connecting.</span>`;
+  }
+  if(govBtn){
+    govBtn.textContent=isConn ? 'Reconnect Google Account' : 'Connect Google Account';
+  }
+}
+
+function connectGoogleAccount(){
+  window.location.href=BACKEND_URL+'/auth/google/login';
+}
+
+async function handleAdminLogin(evt){
+  if(evt)evt.preventDefault();
+  const u=(document.getElementById('adminUser').value||'').trim();
+  const p=(document.getElementById('adminPass').value||'').trim();
+  const msgEl=document.getElementById('loginMsg');
+  if(!u||!p){
+    if(msgEl){ msgEl.textContent='Please enter both username and password'; msgEl.className='login-msg err'; }
+    return;
+  }
+  if(msgEl){ msgEl.textContent='Signing in...'; msgEl.className='login-msg'; }
+  try{
+    const res=await fetch(BACKEND_URL+'/auth/admin/login',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({username:u,password:p}),
+      credentials:'include'
+    });
+    const data=await res.json();
+    if(data && data.ok){
+      window.location.reload();
+    }else{
+      if(msgEl){ msgEl.textContent=data.error||'Invalid credentials'; msgEl.className='login-msg err'; }
+    }
+  }catch(e){
+    if(msgEl){ msgEl.textContent='Login request failed: '+e.message; msgEl.className='login-msg err'; }
+  }
+}
 
 function init(){
   const msgEl=document.getElementById('loginMsg');
@@ -4034,7 +4131,14 @@ function init(){
         if(gate)gate.style.display='none';
         CURRENT_USER_EMAIL=data.email||'';
         const emailEl=document.getElementById('profileEmail');
-        if(emailEl)emailEl.textContent=CURRENT_USER_EMAIL||'Signed in';
+        if(emailEl)emailEl.textContent=CURRENT_USER_EMAIL||'Admin';
+
+        GOOGLE_CONNECTION_STATUS={
+          connected:!!data.googleConnected,
+          email:data.googleEmail||''
+        };
+        updateGoogleUI();
+
         bootDashboard();
       }
       // not authenticated: leave the login gate showing, nothing to boot yet

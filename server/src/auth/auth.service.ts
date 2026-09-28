@@ -108,6 +108,15 @@ export class AuthService {
     return jwt.sign(payload, secret, { expiresIn: '30d' });
   }
 
+  getGoogleConnection() {
+    const conn = this.tokenStore.get();
+    return {
+      connected: !!conn?.refreshToken,
+      email: conn?.email || null,
+      expiryDate: conn?.expiryDate || null,
+    };
+  }
+
   verifySessionToken(token: string): SessionPayload | null {
     try {
       const secret = this.config.get<string>('SESSION_JWT_SECRET')!;

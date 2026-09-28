@@ -80,11 +80,43 @@ export class AuthController {
     }
   }
 
+  @Post('admin/login')
+  adminLogin(@Req() req: Request, @Res() res: Response) {
+    const { username, password } = req.body || {};
+    const validUser = this.config.get<string>('ADMIN_USERNAME') || 'Admin';
+    const validPass = this.config.get<string>('ADMIN_PASSWORD') || 'Melaka@123#';
+
+    if (username === validUser && password === validPass) {
+      const token = this.authService.issueSessionToken({ email: `${validUser}@netstripes.com` });
+      const host = req.get('host') || '';
+      const isLocal = host.includes('localhost') || host.includes('127.0.0.1');
+
+      res.cookie(SESSION_COOKIE, token, {
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: !isLocal && process.env.NODE_ENV === 'production',
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      });
+
+      return res.json({ ok: true, email: `${validUser}@netstripes.com` });
+    }
+
+    return res.status(401).json({ ok: false, error: 'Invalid username or password' });
+  }
+
+  @Get('google/status')
+  googleStatus() {
+    return this.authService.getGoogleConnection();
+  }
+
   @Get('me')
   me(@Req() req: Request) {
     const token = req.cookies?.[SESSION_COOKIE];
     const payload = token ? this.authService.verifySessionToken(token) : null;
-    return payload ? { authenticated: true, email: payload.email } : { authenticated: false };
+    const googleConn = this.authService.getGoogleConnection();
+    return payload
+      ? { authenticated: true, email: payload.email, googleConnected: googleConn.connected, googleEmail: googleConn.email }
+      : { authenticated: false, googleConnected: googleConn.connected, googleEmail: googleConn.email };
   }
 
   @Post('logout')

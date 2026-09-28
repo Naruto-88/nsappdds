@@ -12,5 +12,10 @@ export declare class AuthService {
     buildConsentUrl(redirectUri?: string, state?: string): string;
     handleCallback(code: string, redirectUri?: string): Promise<SessionPayload>;
     issueSessionToken(payload: SessionPayload): string;
+    getGoogleConnection(): {
+        connected: boolean;
+        email: string | null;
+        expiryDate: number | null;
+    };
     verifySessionToken(token: string): SessionPayload | null;
 }
