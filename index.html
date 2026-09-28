@@ -332,11 +332,11 @@ body{background:var(--bg);font-family:var(--fb);color:var(--dk);min-height:100vh
   </div>
   <div class="tb-r">
     <select class="per-sel" id="gPer" onchange="setPeriod(this.value)">
-      <option value="week" selected>This Week</option>
+      <option value="month" selected>This Month</option>
       <option value="lastweek">Last Week</option>
+      <option value="week">This Week</option>
       <option value="week2">Last 2 Weeks</option>
       <option value="week3">Last 3 Weeks</option>
-      <option value="month">This Month</option>
       <option value="q90">90 Days</option>
     </select>
     <select class="per-sel" id="driClientSel" style="display:none;background:var(--ora);color:#fff;font-family:var(--fh);font-weight:700" onchange="if(this.value!=='')openClient(+this.value)">
@@ -483,11 +483,11 @@ body{background:var(--bg);font-family:var(--fb);color:var(--dk);min-height:100vh
   <div class="sec-row">
     <div><div class="eyebrow">DRI Operations</div><div class="sec-title" id="driTitle">Select a Client</div></div>
     <div class="per-tabs">
-      <button class="active" onclick="setCP('week',this)">Week</button>
+      <button onclick="setCP('week',this)">Week</button>
       <button onclick="setCP('lastweek',this)">Last Week</button>
       <button onclick="setCP('week2',this)">2 Weeks</button>
       <button onclick="setCP('week3',this)">3 Weeks</button>
-      <button onclick="setCP('month',this)">Month</button>
+      <button class="active" onclick="setCP('month',this)">Month</button>
       <button onclick="setCP('q90',this)">90 Days</button>
     </div>
   </div>
@@ -801,7 +801,7 @@ let CLIENTS = [];
 // ══════════════════════════════════════════════════════════════
 //  STATE
 // ══════════════════════════════════════════════════════════════
-let AUD='ceo', PERIOD='week', CUR=0, editActIdx=0, editActClient=0, CURVIEW='ceo';
+let AUD='ceo', PERIOD='month', CUR=0, editActIdx=0, editActClient=0, CURVIEW='ceo';
 // Short-lived cache (60s) of per-client live Ads/Meta responses, so the CEO
 // portfolio table's channel-status columns can match the DRI view without
 // re-hitting the APIs on every re-render / filter click. { 'kind|sheetKey|period': {at, v} }
@@ -2675,9 +2675,16 @@ function filterMetricsForPeriod(metricsRows,period,today){
   const dated=metricsRows.map(r=>({...r,_weekDate:parseWeekEndingDate(r.weekEnding)}));
   const withDates=dated.filter(r=>r._weekDate);
   if(withDates.length){
-    return withDates
+    const inRange=withDates
       .filter(r=>dateInPeriodRange(r._weekDate,range))
       .sort((a,b)=>a._weekDate-b._weekDate);
+    // If the current week is selected ('week') but the sheet has no row for this week yet
+    // (e.g. before the digital manager records the ongoing week), fall back to the most
+    // recent recorded week row so the dashboard shows the latest weekly data rather than 0.
+    if(!inRange.length && period==='week'){
+      return [withDates[withDates.length - 1]];
+    }
+    return inRange;
   }
   // If the sheet gives an unexpected date format, keep the older row-count behavior
   // rather than blanking the dashboard completely.
