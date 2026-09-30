@@ -13,18 +13,25 @@ export class AuthController {
   ) {}
 
   private getRedirectUri(req: Request): string {
-    const host = req.get('host') || '';
-    const isLocal = host.includes('localhost') || host.includes('127.0.0.1');
+    const configured = this.config.get<string>('GOOGLE_REDIRECT_URI') || process.env.GOOGLE_REDIRECT_URI;
+    if (configured && configured.trim().startsWith('http') && !configured.includes('localhost') && !configured.includes('127.0.0.1')) {
+      return configured.trim();
+    }
+
+    const forwardedHost = (req.headers['x-forwarded-host'] as string) || '';
+    const rawHost = req.get('host') || '';
+    const host = forwardedHost || rawHost;
+    const isLocal = (host.includes('localhost') || host.includes('127.0.0.1')) && !forwardedHost;
+
     if (isLocal) {
       return `http://${host}/auth/google/callback`;
     }
 
-    const proto = req.headers['x-forwarded-proto'] || req.protocol || 'https';
+    const proto = (req.headers['x-forwarded-proto'] as string) || req.protocol || 'https';
     if (host.includes('dashboard.netstripes.au')) {
       return `${proto}://${host}/auth/google/callback`;
     }
 
-    const configured = this.config.get<string>('GOOGLE_REDIRECT_URI') || process.env.GOOGLE_REDIRECT_URI;
     if (configured && configured.trim().startsWith('http')) {
       return configured.trim();
     }
@@ -33,15 +40,18 @@ export class AuthController {
 
   @Get('google/login')
   login(@Query('redirectUri') queryUri: string, @Req() req: Request, @Res() res: Response) {
-    const host = req.get('host') || 'localhost:3001';
-    const isLocal = host.includes('localhost') || host.includes('127.0.0.1');
+    const forwardedHost = (req.headers['x-forwarded-host'] as string) || '';
+    const rawHost = req.get('host') || '';
+    const host = forwardedHost || rawHost || 'localhost:3001';
+    const isLocal = (host.includes('localhost') || host.includes('127.0.0.1')) && !forwardedHost;
     const redirectUri = queryUri || this.getRedirectUri(req);
-    const proto = req.headers['x-forwarded-proto'] || req.protocol || 'https';
+    const proto = (req.headers['x-forwarded-proto'] as string) || req.protocol || 'https';
+    const configuredOrigin = this.config.get<string>('DASHBOARD_ORIGIN') || process.env.DASHBOARD_ORIGIN;
     const returnTo = isLocal 
       ? `http://${host}/` 
       : host.includes('dashboard.netstripes.au') 
         ? `${proto}://${host}/` 
-        : (this.config.get<string>('DASHBOARD_ORIGIN') || `https://${host}/home`);
+        : (configuredOrigin || `https://${host}/home`);
     res.redirect(this.authService.buildConsentUrl(redirectUri, returnTo));
   }
 
