@@ -25,39 +25,49 @@ let AuthController = class AuthController {
         this.config = config;
     }
     getRedirectUri(req) {
-        const configured = this.config.get('GOOGLE_REDIRECT_URI') || process.env.GOOGLE_REDIRECT_URI;
-        if (configured && configured.trim().startsWith('http') && !configured.includes('localhost') && !configured.includes('127.0.0.1')) {
-            return configured.trim();
-        }
-        const forwardedHost = req.headers['x-forwarded-host'] || '';
+        const configured = (this.config.get('GOOGLE_REDIRECT_URI') || process.env.GOOGLE_REDIRECT_URI || '').trim();
+        const cfHost = req.headers['x-forwarded-host'] || req.headers['x-original-host'] || '';
         const rawHost = req.get('host') || '';
-        const host = forwardedHost || rawHost;
-        const isLocal = (host.includes('localhost') || host.includes('127.0.0.1')) && !forwardedHost;
+        const host = (cfHost.split(',')[0].trim()) || rawHost;
+        const proto = req.headers['x-forwarded-proto']?.split(',')[0].trim() || req.protocol || 'https';
+        if (host.includes('dashboard.netstripes.au')) {
+            return `https://dashboard.netstripes.au/auth/google/callback`;
+        }
+        if (host.includes('nsapp.netstripes.au')) {
+            return `https://nsapp.netstripes.au/home/auth/google/callback`;
+        }
+        if (configured && configured.startsWith('http') && !configured.includes('localhost') && !configured.includes('127.0.0.1')) {
+            return configured;
+        }
+        const isLocal = !cfHost && (host.includes('localhost') || host.startsWith('127.0.0.1'));
         if (isLocal) {
             return `http://${host}/auth/google/callback`;
         }
-        const proto = req.headers['x-forwarded-proto'] || req.protocol || 'https';
-        if (host.includes('dashboard.netstripes.au')) {
-            return `${proto}://${host}/auth/google/callback`;
-        }
-        if (configured && configured.trim().startsWith('http')) {
-            return configured.trim();
-        }
-        return `${proto}://${host}/home/auth/google/callback`;
+        const subpath = (process.env.SUBPATH || '').replace(/^\/+|\/+$/g, '');
+        const pathPrefix = subpath ? `/${subpath}` : '';
+        return `${proto}://${host}${pathPrefix}/auth/google/callback`;
     }
     login(queryUri, req, res) {
-        const forwardedHost = req.headers['x-forwarded-host'] || '';
+        const cfHost = req.headers['x-forwarded-host'] || req.headers['x-original-host'] || '';
         const rawHost = req.get('host') || '';
-        const host = forwardedHost || rawHost || 'localhost:3001';
-        const isLocal = (host.includes('localhost') || host.includes('127.0.0.1')) && !forwardedHost;
+        const host = (cfHost.split(',')[0].trim()) || rawHost || 'localhost:3001';
+        const proto = req.headers['x-forwarded-proto']?.split(',')[0].trim() || req.protocol || 'https';
+        const isLocal = !cfHost && (host.includes('localhost') || host.startsWith('127.0.0.1'));
         const redirectUri = queryUri || this.getRedirectUri(req);
-        const proto = req.headers['x-forwarded-proto'] || req.protocol || 'https';
-        const configuredOrigin = this.config.get('DASHBOARD_ORIGIN') || process.env.DASHBOARD_ORIGIN;
-        const returnTo = isLocal
-            ? `http://${host}/`
-            : host.includes('dashboard.netstripes.au')
-                ? `${proto}://${host}/`
-                : (configuredOrigin || `https://${host}/home`);
+        let returnTo;
+        if (isLocal) {
+            returnTo = `http://${host}/`;
+        }
+        else if (host.includes('dashboard.netstripes.au')) {
+            returnTo = `https://dashboard.netstripes.au/`;
+        }
+        else if (host.includes('nsapp.netstripes.au')) {
+            returnTo = `https://nsapp.netstripes.au/home`;
+        }
+        else {
+            const configuredOrigin = this.config.get('DASHBOARD_ORIGIN') || process.env.DASHBOARD_ORIGIN;
+            returnTo = configuredOrigin || `${proto}://${host}/`;
+        }
         res.redirect(this.authService.buildConsentUrl(redirectUri, returnTo));
     }
     async callback(code, error, state, req, res) {

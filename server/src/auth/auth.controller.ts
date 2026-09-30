@@ -13,45 +13,63 @@ export class AuthController {
   ) {}
 
   private getRedirectUri(req: Request): string {
-    const configured = this.config.get<string>('GOOGLE_REDIRECT_URI') || process.env.GOOGLE_REDIRECT_URI;
-    if (configured && configured.trim().startsWith('http') && !configured.includes('localhost') && !configured.includes('127.0.0.1')) {
-      return configured.trim();
+    const configured = (this.config.get<string>('GOOGLE_REDIRECT_URI') || process.env.GOOGLE_REDIRECT_URI || '').trim();
+
+    // 1. Determine incoming Host from all possible reverse proxy / Cloudflare headers
+    const cfHost = (req.headers['x-forwarded-host'] as string) || (req.headers['x-original-host'] as string) || '';
+    const rawHost = req.get('host') || '';
+    const host = (cfHost.split(',')[0].trim()) || rawHost;
+
+    // 2. Determine Protocol (https by default for production)
+    const proto = (req.headers['x-forwarded-proto'] as string)?.split(',')[0].trim() || req.protocol || 'https';
+
+    // 3. Domain-specific auto-detection
+    if (host.includes('dashboard.netstripes.au')) {
+      return `https://dashboard.netstripes.au/auth/google/callback`;
+    }
+    if (host.includes('nsapp.netstripes.au')) {
+      return `https://nsapp.netstripes.au/home/auth/google/callback`;
     }
 
-    const forwardedHost = (req.headers['x-forwarded-host'] as string) || '';
-    const rawHost = req.get('host') || '';
-    const host = forwardedHost || rawHost;
-    const isLocal = (host.includes('localhost') || host.includes('127.0.0.1')) && !forwardedHost;
+    // 4. If configured in .env with a valid non-local domain, use that
+    if (configured && configured.startsWith('http') && !configured.includes('localhost') && !configured.includes('127.0.0.1')) {
+      return configured;
+    }
 
+    // 5. Truly local development on developer PC
+    const isLocal = !cfHost && (host.includes('localhost') || host.startsWith('127.0.0.1'));
     if (isLocal) {
       return `http://${host}/auth/google/callback`;
     }
 
-    const proto = (req.headers['x-forwarded-proto'] as string) || req.protocol || 'https';
-    if (host.includes('dashboard.netstripes.au')) {
-      return `${proto}://${host}/auth/google/callback`;
-    }
-
-    if (configured && configured.trim().startsWith('http')) {
-      return configured.trim();
-    }
-    return `${proto}://${host}/home/auth/google/callback`;
+    // 6. Generic production fallback: if SUBPATH is set use subpath, else root
+    const subpath = (process.env.SUBPATH || '').replace(/^\/+|\/+$/g, '');
+    const pathPrefix = subpath ? `/${subpath}` : '';
+    return `${proto}://${host}${pathPrefix}/auth/google/callback`;
   }
 
   @Get('google/login')
   login(@Query('redirectUri') queryUri: string, @Req() req: Request, @Res() res: Response) {
-    const forwardedHost = (req.headers['x-forwarded-host'] as string) || '';
+    const cfHost = (req.headers['x-forwarded-host'] as string) || (req.headers['x-original-host'] as string) || '';
     const rawHost = req.get('host') || '';
-    const host = forwardedHost || rawHost || 'localhost:3001';
-    const isLocal = (host.includes('localhost') || host.includes('127.0.0.1')) && !forwardedHost;
+    const host = (cfHost.split(',')[0].trim()) || rawHost || 'localhost:3001';
+    const proto = (req.headers['x-forwarded-proto'] as string)?.split(',')[0].trim() || req.protocol || 'https';
+
+    const isLocal = !cfHost && (host.includes('localhost') || host.startsWith('127.0.0.1'));
     const redirectUri = queryUri || this.getRedirectUri(req);
-    const proto = (req.headers['x-forwarded-proto'] as string) || req.protocol || 'https';
-    const configuredOrigin = this.config.get<string>('DASHBOARD_ORIGIN') || process.env.DASHBOARD_ORIGIN;
-    const returnTo = isLocal 
-      ? `http://${host}/` 
-      : host.includes('dashboard.netstripes.au') 
-        ? `${proto}://${host}/` 
-        : (configuredOrigin || `https://${host}/home`);
+
+    let returnTo: string;
+    if (isLocal) {
+      returnTo = `http://${host}/`;
+    } else if (host.includes('dashboard.netstripes.au')) {
+      returnTo = `https://dashboard.netstripes.au/`;
+    } else if (host.includes('nsapp.netstripes.au')) {
+      returnTo = `https://nsapp.netstripes.au/home`;
+    } else {
+      const configuredOrigin = this.config.get<string>('DASHBOARD_ORIGIN') || process.env.DASHBOARD_ORIGIN;
+      returnTo = configuredOrigin || `${proto}://${host}/`;
+    }
+
     res.redirect(this.authService.buildConsentUrl(redirectUri, returnTo));
   }
 
